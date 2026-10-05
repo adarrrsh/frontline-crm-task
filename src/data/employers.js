@@ -38,6 +38,20 @@ export const EMPLOYERS = [
   e('bayviewhotel', 'Bayview Hotel', 'BH', 0.5, 'Email hr@bayviewhotel.example'),
   e('dogpatch', 'Dogpatch Logistics', 'DL', 0.4, 'Call (415) 555-0190'),
   e('marinakitchen', 'Marina Kitchen', 'MK', 0.35, 'Ask for Chef Rosa · (415) 555-0102'),
+
+  // Switzerland
+  e('kafimuehle', 'Kafi Mühle', 'KM', 0.55, 'Email Ursula · jobs@kafimuehle.example'),
+  e('limmatlogistik', 'Limmat Logistik', 'LL', 0.45, 'Email hr@limmatlogistik.example'),
+  e('bahnhofmarkt', 'Bahnhof Markt', 'BM', 0.4, 'Ask at the till or email personal@bahnhofmarkt.example'),
+  e('hoteldulac', 'Hôtel du Lac', 'HL', 0.5, 'Email rh@hoteldulac.example'),
+  e('velocourrier', 'Vélo Courrier Genève', 'VC', 0.55, 'In-app onboarding · equipe@velocourrier.example'),
+  e('brasseriebastions', 'Brasserie des Bastions', 'BB', 0.4, 'Ask for Hélène · contact@bastions.example'),
+  e('grottoticinese', 'Grotto Ticinese', 'GT', 0.45, 'Ask for Marco · info@grottoticinese.example'),
+  e('mercatoceresio', 'Mercato Ceresio', 'ME', 0.4, 'Email lavoro@mercatoceresio.example'),
+  e('pulitoticino', 'Pulito Ticino', 'PT', 0.5, 'Email squadra@pulitoticino.example'),
+  e('butiagrischuna', 'Butia Grischuna', 'BG', 0.45, 'Email lavur@butiagrischuna.example'),
+  e('ustariasurselva', 'Ustaria Surselva', 'SU', 0.5, 'Ask for Gion · ustaria@surselva.example'),
+  e('curiergrischun', 'Curier Grischun', 'CG', 0.45, 'Email curier@curiergrischun.example'),
 ];
 
 export const EMPLOYERS_BY_ID = new Map(EMPLOYERS.map((x) => [x.id, x]));

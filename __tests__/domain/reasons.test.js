@@ -8,7 +8,7 @@ describe('reasons', () => {
     expect(barista.reasons).toHaveLength(2);
     expect(barista.reasons[0]).toEqual({
       kind: 'distance',
-      text: '1.5 km away',
+      params: { distance: '1.5 km' },
     });
   });
 
@@ -21,7 +21,7 @@ describe('reasons', () => {
       shifts: ['night'],
     });
     const [r] = rankJobs([job], profile(), ORIGIN, []);
-    expect(r.reasons.map((x) => x.text)).toContain('$6/hr above your minimum');
+    expect(r.reasons).toContainEqual({ kind: 'pay', params: { amount: 6 } });
   });
 
   it('reports warnings independently of reasons', () => {
@@ -31,7 +31,10 @@ describe('reasons', () => {
       shifts: ['morning', 'night'],
     });
     const [r] = rankJobs([job], profile(), ORIGIN, []);
-    expect(r.warnings.map((w) => w.text)).toEqual(['Below your minimum pay', 'Only some shifts fit you']);
+    expect(r.warnings).toEqual([
+      { kind: 'belowMinPay', params: {} },
+      { kind: 'partialShifts', params: { none: false } },
+    ]);
     expect(r.reasons.length).toBeGreaterThan(0);
   });
 

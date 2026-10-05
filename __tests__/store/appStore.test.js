@@ -12,6 +12,7 @@ beforeEach(() => {
     locationMode: 'device',
     manualLocation: null,
     matchesSeenAt: 0,
+    uiLanguage: 'en',
   });
 });
 
@@ -80,6 +81,12 @@ describe('useAppStore', () => {
     store().resetDemo({ profile: true });
     expect(store().profile).toEqual(EMPTY_PROFILE);
     expect(store().hasOnboarded).toBe(false);
+  });
+
+  it('keeps the app language through a full reset', () => {
+    store().setUiLanguage('rm');
+    store().resetDemo({ profile: true });
+    expect(store().uiLanguage).toBe('rm');
   });
 
   it('switches between manual and device location', () => {

@@ -2,18 +2,21 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppLanguagePicker } from '@/components/AppLanguagePicker';
 import { Button } from '@/components/Button';
-import { CategoryChip, ShiftChip } from '@/components/Chips';
+import { CategoryChip, LanguageChip, ShiftChip } from '@/components/Chips';
 import { Stepper, Toggle, ToggleRow } from '@/components/Controls';
 import { Icon } from '@/components/Icon';
 import { LocationPickerSheet } from '@/components/LocationPickerSheet';
 import { RadiusSlider } from '@/components/RadiusSlider';
 import { Text } from '@/components/Text';
-import { experienceLabel } from '@/domain/labels';
-import { CATEGORIES, SHIFTS } from '@/domain/types';
+import { formatMoney } from '@/domain/money';
+import { CATEGORIES, LANGUAGES, SHIFTS } from '@/domain/types';
 import { useEffectiveLocation } from '@/hooks/useEffectiveLocation';
 import { useLocationActions } from '@/hooks/useLocationActions';
 import { useLocationChoices } from '@/hooks/useLocationChoices';
+import { useT } from '@/hooks/useT';
+import { experienceLabel, placeLabel } from '@/i18n/format';
 import { useAppStore } from '@/store/useAppStore';
 import { useDeckStore } from '@/store/useDeckStore';
 import { useUiStore } from '@/store/useUiStore';
@@ -34,6 +37,7 @@ function SectionTitle({ children }) {
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const profile = useAppStore((s) => s.profile);
   const saveProfile = useAppStore((s) => s.saveProfile);
   const resetDemo = useAppStore((s) => s.resetDemo);
@@ -49,14 +53,12 @@ export default function Profile() {
 
   const confirmReset = (all) =>
     Alert.alert(
-      all ? 'Start over?' : 'Reset demo data?',
-      all
-        ? 'Clears your profile, likes and matches and returns to onboarding.'
-        : 'Clears your swipes, likes and matches. Your profile stays.',
+      t(all ? 'profile.startOverTitle' : 'profile.resetTitle'),
+      t(all ? 'profile.startOverBody' : 'profile.resetBody'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: all ? 'Start over' : 'Reset',
+          text: t(all ? 'profile.startOverConfirm' : 'profile.resetConfirm'),
           style: 'destructive',
           onPress: () => {
             useDeckStore.getState().setPins([]);
@@ -68,19 +70,20 @@ export default function Profile() {
     );
 
   const usingDevice = locationMode === 'device';
+  const place = placeLabel(t, loc.placeName);
   const deviceSub = !usingDevice
-    ? 'Off — using a chosen area'
+    ? t('profile.deviceOff')
     : loc.status === 'granted'
-      ? `On — near ${loc.placeName}`
+      ? t('profile.deviceOn', { place })
       : loc.status === 'denied'
-        ? 'Permission denied in Settings'
-        : 'On — waiting for a location';
+        ? t('profile.deviceDenied')
+        : t('profile.deviceWaiting');
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 10 }]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text variant="title1" accessibilityRole="header">
-          Profile
+          {t('profile.title')}
         </Text>
         <View style={styles.identity}>
           <View style={styles.avatar}>
@@ -89,33 +92,33 @@ export default function Profile() {
             </Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{profile.name || 'Your name'}</Text>
+            <Text style={styles.name}>{profile.name || t('profile.yourName')}</Text>
             <Text variant="callout" color={colors.inkMuted} style={{ fontFamily: fonts.regular }}>
-              {loc.placeName ? `Searching near ${loc.placeName}` : 'No location yet'}
+              {loc.placeName ? t('profile.searchingNear', { place }) : t('profile.noLocation')}
             </Text>
           </View>
         </View>
 
         <Text variant="label" color={colors.primaryDeep} style={styles.sectionTitle} accessibilityRole="header">
-          About you
+          {t('profile.about')}
         </Text>
         <View style={{ gap: 6, marginBottom: 16 }}>
           <Text variant="callout" style={{ fontFamily: fonts.bold }}>
-            First name
+            {t('onboarding.firstName')}
           </Text>
           <TextInput
             value={profile.name}
             onChangeText={(name) => patch({ name })}
             style={styles.input}
             autoCapitalize="words"
-            accessibilityLabel="First name"
+            accessibilityLabel={t('onboarding.firstName')}
           />
         </View>
         <View style={styles.between}>
-          <Text variant="headline">Experience</Text>
+          <Text variant="headline">{t('profile.experience')}</Text>
           <Stepper
-            label="years of experience"
-            value={experienceLabel(profile.experienceYears)}
+            label={t('onboarding.experienceA11y')}
+            value={experienceLabel(t, profile.experienceYears)}
             canDecrement={profile.experienceYears > 0}
             canIncrement={profile.experienceYears < 3}
             onDecrement={() =>
@@ -132,17 +135,33 @@ export default function Profile() {
         </View>
         <View style={styles.hairTop}>
           <ToggleRow
-            title="Own transport"
-            subtitle="Car, bike or scooter"
-            label="Own transport"
+            title={t('profile.transport')}
+            subtitle={t('onboarding.transportSub')}
+            label={t('profile.transport')}
             value={profile.hasTransport}
             onChange={(hasTransport) => patch({ hasTransport })}
           />
         </View>
+        <Text variant="callout" style={[styles.fieldLabel, { marginTop: 16 }]}>
+          {t('profile.languages')}
+        </Text>
+        <View style={styles.wrap}>
+          {LANGUAGES.map((l) => (
+            <LanguageChip
+              key={l}
+              language={l}
+              selected={profile.languages.includes(l)}
+              onPress={() => patch({ languages: toggle(profile.languages, l) })}
+            />
+          ))}
+        </View>
 
-        <SectionTitle>Preferences</SectionTitle>
+        <SectionTitle>{t('profile.appLanguage')}</SectionTitle>
+        <AppLanguagePicker />
+
+        <SectionTitle>{t('profile.preferences')}</SectionTitle>
         <Text variant="callout" style={styles.fieldLabel}>
-          Job types
+          {t('onboarding.jobTypes')}
         </Text>
         <View style={[styles.wrap, { marginBottom: 18 }]}>
           {CATEGORIES.map((c) => (
@@ -155,7 +174,7 @@ export default function Profile() {
           ))}
         </View>
         <Text variant="callout" style={styles.fieldLabel}>
-          Shifts
+          {t('profile.shifts')}
         </Text>
         <View style={[styles.wrap, { marginBottom: 18 }]}>
           {SHIFTS.map((s) => (
@@ -168,30 +187,30 @@ export default function Profile() {
           ))}
         </View>
         <View style={styles.between}>
-          <Text variant="headline">Minimum pay</Text>
+          <Text variant="headline">{t('onboarding.minPay')}</Text>
           <Stepper
-            label="minimum pay per hour"
-            value={`$${profile.minPayPerHour}/hr`}
+            label={t('onboarding.minPayA11y')}
+            value={t('pay.perHour', { amount: formatMoney(profile.minPayPerHour) })}
             canDecrement={profile.minPayPerHour > 10}
             onDecrement={() => patch({ minPayPerHour: Math.max(10, profile.minPayPerHour - 1) })}
             onIncrement={() => patch({ minPayPerHour: Math.min(60, profile.minPayPerHour + 1) })}
           />
         </View>
 
-        <SectionTitle>Travel distance</SectionTitle>
-        <Text style={styles.radius}>{`Up to ${profile.maxDistanceKm} km`}</Text>
+        <SectionTitle>{t('profile.travel')}</SectionTitle>
+        <Text style={styles.radius}>{t('common.upToKm', { km: profile.maxDistanceKm })}</Text>
         <RadiusSlider value={profile.maxDistanceKm} onChange={(maxDistanceKm) => patch({ maxDistanceKm })} />
 
-        <SectionTitle>Location</SectionTitle>
+        <SectionTitle>{t('profile.location')}</SectionTitle>
         <View style={[styles.row, styles.hairBottom]}>
           <View style={{ flex: 1 }}>
-            <Text variant="headline">Use device location</Text>
+            <Text variant="headline">{t('profile.useDevice')}</Text>
             <Text variant="callout" color={colors.inkMuted} style={{ fontFamily: fonts.regular, fontSize: 14 }}>
               {deviceSub}
             </Text>
           </View>
           <Toggle
-            label="Use device location"
+            label={t('profile.useDevice')}
             value={usingDevice}
             onChange={(on) => (on ? void switchToDevice() : setPickerOpen(true))}
           />
@@ -199,7 +218,7 @@ export default function Profile() {
         {!usingDevice ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Using manual location ${manual?.name ?? ''}. Change`}
+            accessibilityLabel={t('profile.manualA11y', { place: manual?.name ?? '' })}
             onPress={() => setPickerOpen(true)}
             style={({ pressed }) => [styles.row, styles.hairBottom, pressed && { backgroundColor: colors.n200 }]}
           >
@@ -215,7 +234,7 @@ export default function Profile() {
                 }}
                 color={colors.inkMuted}
               >
-                Using manual location
+                {t('location.manual')}
               </Text>
               <Text
                 style={{
@@ -224,20 +243,20 @@ export default function Profile() {
                   lineHeight: 22,
                 }}
               >
-                {manual?.name ?? 'Choose an area'}
+                {manual?.name ?? t('profile.chooseArea')}
               </Text>
             </View>
             <Text style={{ fontFamily: fonts.bold, fontSize: 16 }} color={colors.primaryDeep}>
-              Change
+              {t('profile.change')}
             </Text>
             <Icon name="chev-r" size={20} strokeWidth={2.5} />
           </Pressable>
         ) : null}
 
         <View style={{ marginTop: 36, gap: 8 }}>
-          <Button label="Reset demo data" variant="destructive" icon="trash" onPress={() => confirmReset(false)} />
+          <Button label={t('profile.reset')} variant="destructive" icon="trash" onPress={() => confirmReset(false)} />
           <Text variant="callout" color={colors.inkMuted} style={{ fontFamily: fonts.regular, fontSize: 14 }}>
-            {"Clears your swipes, likes and matches. Your profile stays. Can't be undone."}
+            {t('profile.resetNote')}
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -252,7 +271,7 @@ export default function Profile() {
               }}
               color={colors.inkSoft}
             >
-              Start over from onboarding
+              {t('profile.startOver')}
             </Text>
           </Pressable>
         </View>

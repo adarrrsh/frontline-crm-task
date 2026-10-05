@@ -2,6 +2,7 @@ import { KeyboardAvoidingView, Modal, Pressable, StyleSheet, View } from 'react-
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/hooks/useT';
 import { colors, radius, shadows } from '@/theme';
 
 import { Icon } from './Icon';
@@ -10,11 +11,12 @@ import { Text } from './Text';
 /** Square-topped sheet with a 2px ink rule, grabber and close button. */
 export function BottomSheet({ visible, title, onClose, children, footer }) {
   const insets = useSafeAreaInsets();
+  const t = useT();
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <Animated.View entering={FadeIn.duration(180)} style={styles.scrim}>
-          <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button" />
+          <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel={t('common.close')} accessibilityRole="button" />
         </Animated.View>
         <Animated.View
           entering={SlideInDown.duration(260)}
@@ -28,7 +30,7 @@ export function BottomSheet({ visible, title, onClose, children, footer }) {
             </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={t('common.close')}
               onPress={onClose}
               style={({ pressed }) => [styles.close, pressed && { backgroundColor: colors.n300 }]}
             >

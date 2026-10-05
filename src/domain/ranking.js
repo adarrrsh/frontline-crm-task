@@ -1,5 +1,7 @@
 import { affinityFor, categoryAffinity } from './affinity';
 import { distanceKm } from './geo';
+import { languageFit } from './languages';
+import { payInUsd } from './money';
 import { explain, warningsFor } from './reasons';
 import {
   AFFINITY_WEIGHT,
@@ -8,6 +10,7 @@ import {
   DIVERSITY_LOOKAHEAD,
   DIVERSITY_MAX_SCORE_DROP,
   FRESHNESS_DAYS,
+  LANGUAGE_MISMATCH_PENALTY,
   MAX_SAME_CATEGORY_RUN,
   MAX_SAME_EMPLOYER_RUN,
   NON_PREFERRED_CATEGORY,
@@ -24,7 +27,7 @@ export function computeFeatures(job, distance, profile, affinity) {
 
   const category = profile.categories.length === 0 || profile.categories.includes(job.category) ? 1 : NON_PREFERRED_CATEGORY;
 
-  const pay = clamp(0.5 + (job.payPerHour - profile.minPayPerHour) / (2 * PAY_SPREAD), 0, 1);
+  const pay = clamp(0.5 + (payInUsd(job) - profile.minPayPerHour) / (2 * PAY_SPREAD), 0, 1);
 
   const shiftFit =
     profile.shifts.length === 0 || job.shifts.length === 0
@@ -40,6 +43,7 @@ export function computeFeatures(job, distance, profile, affinity) {
     pay,
     shiftFit,
     urgency,
+    language: languageFit(job, profile),
     affinity: affinityFor(affinity, job.category),
   };
 }
@@ -53,7 +57,8 @@ export function scoreOf(f) {
     WEIGHTS.shiftFit * f.shiftFit +
     WEIGHTS.urgency * f.urgency;
   const learned = AFFINITY_WEIGHT * (2 * f.affinity - 1);
-  return Math.round(100 * clamp(base + learned, 0, 1));
+  const language = LANGUAGE_MISMATCH_PENALTY * (1 - (f.language ?? 1));
+  return Math.round(100 * clamp(base + learned - language, 0, 1));
 }
 
 /** Unswiped jobs within `radiusKm` of `origin` — the only hard filters. */

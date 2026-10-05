@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts, radius } from '@/theme';
 
 import { BottomSheet } from './BottomSheet';
@@ -9,12 +10,18 @@ import { Text } from './Text';
 
 /** Mocked: shows the employer's preferred channel. No calls or messages are sent. */
 export function ContactSheet({ employer, onClose }) {
+  const t = useT();
   if (!employer) return null;
   return (
-    <BottomSheet visible title={`Contact ${employer.name}`} onClose={onClose} footer={<Button label="Done" onPress={onClose} />}>
+    <BottomSheet
+      visible
+      title={t('contact.title', { employer: employer.name })}
+      onClose={onClose}
+      footer={<Button label={t('common.done')} onPress={onClose} />}
+    >
       <View style={{ gap: 14 }}>
         <Text variant="label" color={colors.inkMuted} style={{ fontSize: 12 }}>
-          Preferred channel
+          {t('contact.channel')}
         </Text>
         <View style={styles.row}>
           <View style={styles.tile}>
@@ -23,7 +30,7 @@ export function ContactSheet({ employer, onClose }) {
           <Text style={styles.contact}>{employer.contact}</Text>
         </View>
         <Text variant="callout" color={colors.inkMuted} style={{ fontFamily: fonts.regular }}>
-          Mention you matched on Shiftmatch. This is a prototype — nothing is sent from the app.
+          {t('contact.note')}
         </Text>
       </View>
     </BottomSheet>

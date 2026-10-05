@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts, radius, touch } from '@/theme';
 
 import { Icon } from './Icon';
@@ -24,6 +25,9 @@ function Face({ icon, label, look, fill, style }) {
  * cross-faded from the card's drag, so the button mirrors the gesture.
  */
 export function ActionBar({ drag, onPass, onLike, onUndo, canUndo, disabled }) {
+  const t = useT();
+  const pass = t('actions.pass');
+  const interested = t('actions.interested');
   const right = useAnimatedStyle(() => ({
     opacity: interpolate(drag.get(), [0, ACTIVE_AT], [0, 1], Extrapolation.CLAMP),
   }));
@@ -49,21 +53,21 @@ export function ActionBar({ drag, onPass, onLike, onUndo, canUndo, disabled }) {
     <View style={[styles.row, disabled && { opacity: 0.45 }]} pointerEvents={disabled ? 'none' : 'auto'}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Undo last swipe"
+        accessibilityLabel={t('actions.undoA11y')}
         disabled={!canUndo}
         onPress={onUndo}
         style={({ pressed }) => [styles.undo, { opacity: canUndo ? 1 : 0.4 }, pressed && { backgroundColor: colors.n300 }]}
       >
         <Icon name="undo" size={22} strokeWidth={2.5} />
-        <Text style={styles.undoText}>Undo</Text>
+        <Text style={styles.undoText}>{t('actions.undo')}</Text>
       </Pressable>
 
-      <Pressable accessibilityRole="button" accessibilityLabel="Pass" onPress={onPass} style={{ flex: 1 }}>
+      <Pressable accessibilityRole="button" accessibilityLabel={pass} onPress={onPass} style={{ flex: 1 }}>
         {({ pressed }) => (
           <Animated.View style={[styles.big, passScale]}>
             <Face
               icon="x"
-              label="Pass"
+              label={pass}
               look={{
                 bg: pressed ? colors.n200 : colors.bg,
                 border: colors.ink,
@@ -71,22 +75,22 @@ export function ActionBar({ drag, onPass, onLike, onUndo, canUndo, disabled }) {
               }}
             />
             <Animated.View style={[StyleSheet.absoluteFill, right]}>
-              <Face icon="x" label="Pass" look={{ bg: colors.bg, border: colors.n400, fg: colors.n600 }} />
+              <Face icon="x" label={pass} look={{ bg: colors.bg, border: colors.n400, fg: colors.n600 }} />
             </Animated.View>
             <Animated.View style={[StyleSheet.absoluteFill, left]}>
-              <Face icon="x" label="Pass" look={{ bg: colors.ink, border: colors.ink, fg: colors.bg }} />
+              <Face icon="x" label={pass} look={{ bg: colors.ink, border: colors.ink, fg: colors.bg }} />
             </Animated.View>
           </Animated.View>
         )}
       </Pressable>
 
-      <Pressable accessibilityRole="button" accessibilityLabel="Interested" onPress={onLike} style={{ flex: 1.25 }}>
+      <Pressable accessibilityRole="button" accessibilityLabel={interested} onPress={onLike} style={{ flex: 1.25 }}>
         {({ pressed }) => (
           <Animated.View style={[styles.big, likeScale]}>
             <Face
               icon="heart"
               fill
-              label="Interested"
+              label={interested}
               look={{
                 bg: pressed ? colors.likePressed : colors.like,
                 border: colors.like,
@@ -97,7 +101,7 @@ export function ActionBar({ drag, onPass, onLike, onUndo, canUndo, disabled }) {
               <Face
                 icon="heart"
                 fill
-                label="Interested"
+                label={interested}
                 look={{
                   bg: colors.likeTint,
                   border: colors.likeTint,
@@ -109,7 +113,7 @@ export function ActionBar({ drag, onPass, onLike, onUndo, canUndo, disabled }) {
               <Face
                 icon="heart"
                 fill
-                label="Interested"
+                label={interested}
                 look={{
                   bg: colors.likePressed,
                   border: colors.likePressed,

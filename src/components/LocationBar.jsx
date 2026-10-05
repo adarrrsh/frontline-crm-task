@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts, radius } from '@/theme';
 
 import { Icon } from './Icon';
@@ -14,12 +15,13 @@ const TILE = {
 
 /** Discover header: where you're searching from (tap to change) + the radius chip. */
 export function LocationBar({ title, subtitle, icon = 'pin', tone = 'ok', radius, onPressLocation, onPressRadius }) {
+  const t = useT();
   return (
     <View style={styles.row}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${title}. ${subtitle}`}
-        accessibilityHint="Change location"
+        accessibilityHint={t('location.changeHint')}
         onPress={onPressLocation}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
@@ -39,8 +41,8 @@ export function LocationBar({ title, subtitle, icon = 'pin', tone = 'ok', radius
       {radius && onPressRadius ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Travel distance ${radius}`}
-          accessibilityHint="Change how far you'll travel"
+          accessibilityLabel={t('location.radiusA11y', { radius })}
+          accessibilityHint={t('location.radiusHint')}
           onPress={onPressRadius}
           style={({ pressed }) => [styles.radius, pressed && styles.pressed]}
         >

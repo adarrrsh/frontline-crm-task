@@ -15,8 +15,10 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { distanceKm, formatDistance } from '@/domain/geo';
-import { CATEGORY_ICON, CATEGORY_LABEL, payLabel } from '@/domain/labels';
+import { CATEGORY_ICON } from '@/domain/labels';
 import { useEffectiveLocation } from '@/hooks/useEffectiveLocation';
+import { useT } from '@/hooks/useT';
+import { payLabel } from '@/i18n/format';
 import { useCatalogStore } from '@/store/useCatalogStore';
 import { useUiStore } from '@/store/useUiStore';
 import { categoryColor, colors, fonts, radius, shadows } from '@/theme';
@@ -63,6 +65,7 @@ export function MatchModalHost() {
   const employer = useCatalogStore((s) => (job ? s.employersById.get(job.employerId) : undefined));
   const { coords } = useEffectiveLocation();
   const insets = useSafeAreaInsets();
+  const t = useT();
 
   if (!job || !employer) return null;
   const c = categoryColor[job.category];
@@ -79,10 +82,10 @@ export function MatchModalHost() {
         </View>
         <Animated.View entering={FadeIn.duration(250)} style={styles.headline}>
           <Text variant="label" color={colors.white} style={{ fontSize: 14, letterSpacing: 1.7 }}>
-            New match
+            {t('match.kicker')}
           </Text>
           <Text style={styles.big} color={colors.white} accessibilityRole="header">
-            {"It's a match!"}
+            {t('match.title')}
           </Text>
         </Animated.View>
 
@@ -96,31 +99,31 @@ export function MatchModalHost() {
             <View style={styles.catRow}>
               <Icon name={CATEGORY_ICON[job.category]} size={14} strokeWidth={2.5} color={c} />
               <Text style={styles.cat} color={c}>
-                {CATEGORY_LABEL[job.category]}
+                {t(`category.${job.category}`)}
               </Text>
             </View>
             <Text style={styles.title}>{job.title}</Text>
-            <Text variant="callout">{`${payLabel(job)} · ${dist}${job.area}`}</Text>
+            <Text variant="callout">{`${payLabel(t, job)} · ${dist}${job.area}`}</Text>
           </View>
         </Animated.View>
 
-        <Text style={styles.wants} color={colors.white}>{`${employer.name} wants to hear from you!`}</Text>
+        <Text style={styles.wants} color={colors.white}>{t('match.wants', { employer: employer.name })}</Text>
 
         <View style={{ flex: 1 }} />
         <View style={styles.actions}>
           <Button
-            label="View match"
+            label={t('match.view')}
             variant="onAccent"
             iconRight="arrow"
             onPress={() => {
               dismiss();
               router.push({
                 pathname: '/job/[id]',
-                params: { id: job.id, from: 'Matches' },
+                params: { id: job.id, from: 'matches' },
               });
             }}
           />
-          <Button label="Keep swiping" variant="outlineLight" onPress={dismiss} />
+          <Button label={t('match.keepSwiping')} variant="outlineLight" onPress={dismiss} />
         </View>
       </View>
     </Modal>

@@ -9,13 +9,15 @@ import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { Text } from '@/components/Text';
 import { formatDistance } from '@/domain/geo';
-import { payLabel, timeAgo } from '@/domain/labels';
 import { useLikedJobs } from '@/hooks/useLikedJobs';
+import { useT } from '@/hooks/useT';
+import { payLabel, timeAgo } from '@/i18n/format';
 import { useAppStore } from '@/store/useAppStore';
 import { categoryColor, colors, fonts, radius, shadows } from '@/theme';
 
 export default function Matches() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const rows = useLikedJobs()
     .filter((r) => r.liked.status === 'matched')
     .sort((a, b) => (b.liked.resolvedAt ?? 0) - (a.liked.resolvedAt ?? 0));
@@ -40,19 +42,23 @@ export default function Matches() {
     <View style={[styles.screen, { paddingTop: insets.top + 10 }]}>
       <View style={styles.header}>
         <Text variant="title1" accessibilityRole="header">
-          Matches
+          {t('matches.title')}
         </Text>
-        {newCount > 0 ? <Text style={styles.newCount} color={colors.primaryDeep}>{`${newCount} new`}</Text> : null}
+        {newCount > 0 ? (
+          <Text style={styles.newCount} color={colors.primaryDeep}>
+            {t('matches.new', { count: newCount })}
+          </Text>
+        ) : null}
       </View>
       {rows.length === 0 ? (
         <EmptyState
           style={styles.empty}
           icon="badge"
           tone="accent"
-          title="No matches yet"
-          body="When an employer likes you back, they'll show up here. Replies arrive within a few seconds in this demo — keep swiping in the meantime."
+          title={t('matches.emptyTitle')}
+          body={t('matches.emptyBody')}
           primary={{
-            label: 'Back to Discover',
+            label: t('matches.backToDiscover'),
             icon: 'layers',
             onPress: () => router.navigate('/'),
           }}
@@ -78,11 +84,12 @@ export default function Matches() {
 }
 
 function MatchCard({ row: { job, employer, liked, distanceKm }, isNew, now, onContact }) {
+  const t = useT();
   const c = categoryColor[job.category];
   const open = () =>
     router.push({
       pathname: '/job/[id]',
-      params: { id: job.id, from: 'Matches' },
+      params: { id: job.id, from: 'matches' },
     });
   return (
     <View style={styles.cardShadow}>
@@ -101,30 +108,30 @@ function MatchCard({ row: { job, employer, liked, distanceKm }, isNew, now, onCo
               </Text>
               <View style={styles.when}>
                 <View style={styles.dot} />
-                <Text style={styles.whenText} color={colors.likeInk}>{`Matched ${timeAgo(liked.resolvedAt ?? now, now)}`}</Text>
+                <Text style={styles.whenText} color={colors.likeInk}>{t('matches.matchedAgo', { ago: timeAgo(t, liked.resolvedAt ?? now, now) })}</Text>
               </View>
             </View>
             {isNew ? (
               <View style={styles.newTag}>
                 <Text style={styles.newText} color={colors.white}>
-                  NEW
+                  {t('matches.newTag')}
                 </Text>
               </View>
             ) : null}
           </View>
           <Text style={styles.title}>{job.title}</Text>
           <View style={styles.facts}>
-            <Text style={styles.fact}>{payLabel(job)}</Text>
+            <Text style={styles.fact}>{payLabel(t, job)}</Text>
             <View style={styles.inline}>
               <Icon name="pin" size={16} strokeWidth={2.5} />
               <Text style={styles.fact}>{distanceKm !== null ? `${formatDistance(distanceKm)} · ${job.area}` : job.area}</Text>
             </View>
           </View>
           <View style={styles.actions}>
-            <Button label="Contact employer" icon="phone" height={52} onPress={onContact} style={{ flex: 1 }} />
+            <Button label={t('matches.contact')} icon="phone" height={52} onPress={onContact} style={{ flex: 1 }} />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="View job"
+              accessibilityLabel={t('matches.viewJob')}
               onPress={open}
               style={({ pressed }) => [styles.view, pressed && { backgroundColor: colors.n200 }]}
             >

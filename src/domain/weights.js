@@ -7,6 +7,12 @@ export const WEIGHTS = {
   urgency: 0.1,
 };
 
+/** Subtracted when the worker speaks none of the job's languages (a penalty, not a filter). */
+export const LANGUAGE_MISMATCH_PENALTY = 0.3;
+
+/** How strongly "You speak German" competes with the other reasons on a card. */
+export const LANGUAGE_REASON_WEIGHT = 0.25;
+
 /** Max ± contribution of learned category affinity. */
 export const AFFINITY_WEIGHT = 0.15;
 

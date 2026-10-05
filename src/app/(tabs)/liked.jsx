@@ -8,13 +8,15 @@ import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { Text } from '@/components/Text';
 import { formatDistance } from '@/domain/geo';
-import { payLabel } from '@/domain/labels';
 import { useLikedJobs } from '@/hooks/useLikedJobs';
+import { useT } from '@/hooks/useT';
+import { payLabel } from '@/i18n/format';
 import { categoryColor, colors, fonts, radius } from '@/theme';
 
 export default function Liked() {
   const insets = useSafeAreaInsets();
   const rows = useLikedJobs();
+  const t = useT();
   const [filter, setFilter] = useState('all');
 
   const counts = {
@@ -28,10 +30,12 @@ export default function Liked() {
     <View style={[styles.screen, { paddingTop: insets.top + 10 }]}>
       <View style={styles.header}>
         <Text variant="title1" accessibilityRole="header">
-          Liked
+          {t('liked.title')}
         </Text>
         {rows.length > 0 ? (
-          <Text variant="callout" color={colors.inkMuted}>{`${rows.length} ${rows.length === 1 ? 'job' : 'jobs'}`}</Text>
+          <Text variant="callout" color={colors.inkMuted}>
+            {t('common.jobs', { count: rows.length })}
+          </Text>
         ) : null}
       </View>
 
@@ -40,10 +44,10 @@ export default function Liked() {
           style={styles.empty}
           icon="heart"
           tone="like"
-          title="No liked jobs yet"
-          body="Swipe right on a job you want and it'll wait for you here."
+          title={t('liked.emptyTitle')}
+          body={t('liked.emptyBody')}
           primary={{
-            label: 'Start swiping',
+            label: t('liked.startSwiping'),
             icon: 'layers',
             onPress: () => router.navigate('/'),
           }}
@@ -52,9 +56,9 @@ export default function Liked() {
         <>
           <View style={styles.segment} accessibilityRole="tablist">
             {[
-              ['all', 'All'],
-              ['pending', 'Waiting'],
-              ['matched', 'Matched'],
+              ['all', t('liked.all')],
+              ['pending', t('liked.waiting')],
+              ['matched', t('liked.matched')],
             ].map(([key, label], i) => {
               const on = filter === key;
               return (
@@ -81,7 +85,7 @@ export default function Liked() {
             renderItem={({ item }) => <LikedRowView row={item} />}
             ListEmptyComponent={
               <Text variant="callout" color={colors.inkMuted} style={{ paddingVertical: 20 }}>
-                Nothing here right now.
+                {t('liked.nothing')}
               </Text>
             }
           />
@@ -92,8 +96,9 @@ export default function Liked() {
 }
 
 function LikedRowView({ row: { job, employer, liked, distanceKm } }) {
+  const t = useT();
   const faded = liked.status === 'declined';
-  const meta = [payLabel(job), distanceKm !== null ? formatDistance(distanceKm) : null].filter(Boolean).join(' · ');
+  const meta = [payLabel(t, job), distanceKm !== null ? formatDistance(distanceKm) : null].filter(Boolean).join(' · ');
   return (
     <Pressable
       accessibilityRole="button"
@@ -101,7 +106,7 @@ function LikedRowView({ row: { job, employer, liked, distanceKm } }) {
       onPress={() =>
         router.push({
           pathname: '/job/[id]',
-          params: { id: job.id, from: 'Liked' },
+          params: { id: job.id, from: 'liked' },
         })
       }
       style={({ pressed }) => [styles.row, { opacity: faded ? 0.6 : 1 }, pressed && { backgroundColor: colors.n200 }]}

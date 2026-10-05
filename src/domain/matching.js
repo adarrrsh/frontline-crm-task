@@ -1,3 +1,5 @@
+import { languageFit } from './languages';
+
 /** FNV-1a → [0, 1). Deterministic, so the same profile always gets the same employer replies. */
 export function hash01(input) {
   let h = 0x811c9dc5;
@@ -13,6 +15,7 @@ export function interestProbability(job, employer, profile) {
   if (job.shifts.length > 0 && job.shifts.every((s) => profile.shifts.includes(s))) p += 0.15;
   if (profile.experienceYears >= 1) p += 0.1;
   if (job.category === 'delivery') p += profile.hasTransport ? 0.1 : -0.3;
+  if (languageFit(job, profile) === 0) p -= 0.3;
   return Math.min(0.95, Math.max(0.05, p));
 }
 

@@ -1,29 +1,39 @@
 import { StyleSheet, View } from 'react-native';
 
 import { formatDistance } from '@/domain/geo';
-import { CATEGORY_ICON, CATEGORY_LABEL, EMPLOYMENT_LABEL, hoursLabel, SHIFT_LABEL, START_LABEL } from '@/domain/labels';
+import { CATEGORY_ICON } from '@/domain/labels';
+import { currencyOf, formatMoney } from '@/domain/money';
+import { useT } from '@/hooks/useT';
+import { hoursLabel, languageList, reasonText, warningText } from '@/i18n/format';
+import { useAppStore } from '@/store/useAppStore';
 import { categoryColor, colors, fonts, radius } from '@/theme';
 
-import { ReasonChip, RequirementTag, ShiftTag, WarningChip } from './Chips';
+import { LanguageTag, ReasonChip, RequirementTag, ShiftTag, WarningChip } from './Chips';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
-export function jobAccessibilityLabel({ job, distanceKm, reasons, warnings }, employer) {
+export function jobAccessibilityLabel(t, { job, distanceKm, reasons, warnings }, employer) {
   return [
-    `${job.title} at ${employer?.name ?? 'employer'}`,
-    `$${job.payPerHour} an hour${job.tips ? ' plus tips' : ''}`,
-    `${formatDistance(distanceKm)} away in ${job.area}`,
-    job.shifts.map((s) => SHIFT_LABEL[s]).join(', '),
-    START_LABEL[job.startsAt],
-    ...reasons.map((r) => r.text),
-    ...warnings.map((w) => w.text),
-  ].join('. ');
+    t('card.at', { title: job.title, employer: employer?.name ?? t('card.employer') }),
+    t(job.tips ? 'card.payA11yTips' : 'card.payA11y', { amount: formatMoney(job.payPerHour, currencyOf(job)) }),
+    t('card.awayIn', { distance: formatDistance(distanceKm), area: job.area }),
+    job.shifts.map((s) => t(`shift.${s}`)).join(', '),
+    t(`start.${job.startsAt}`),
+    job.languages?.length ? t('card.speaks', { languages: languageList(t, job.languages) }) : null,
+    ...reasons.map((r) => reasonText(t, r)),
+    ...warnings.map((w) => warningText(t, w)),
+  ]
+    .filter(Boolean)
+    .join('. ');
 }
 
 /** Card body. Reads top-down: who, what, how much, how far, when, why. */
 export function JobCard({ ranked, employer }) {
   const { job, distanceKm, reasons, warnings } = ranked;
+  const t = useT();
+  const spoken = useAppStore((s) => s.profile.languages);
   const c = categoryColor[job.category];
+  const languages = job.languages ?? [];
   return (
     <View style={styles.card}>
       <View style={{ height: 8, backgroundColor: c }} />
@@ -41,7 +51,7 @@ export function JobCard({ ranked, employer }) {
             <View style={styles.catRow}>
               <Icon name={CATEGORY_ICON[job.category]} size={16} strokeWidth={2.5} color={c} />
               <Text style={styles.cat} color={c}>
-                {CATEGORY_LABEL[job.category]}
+                {t(`category.${job.category}`)}
               </Text>
             </View>
           </View>
@@ -52,8 +62,8 @@ export function JobCard({ ranked, employer }) {
         </Text>
 
         <View style={styles.payRow}>
-          <Text variant="pay">{`$${job.payPerHour}`}</Text>
-          <Text style={styles.unit}>{job.tips ? '/hr + tips' : '/hr'}</Text>
+          <Text variant="pay">{formatMoney(job.payPerHour, currencyOf(job))}</Text>
+          <Text style={styles.unit}>{t(job.tips ? 'pay.unitTips' : 'pay.unit')}</Text>
         </View>
 
         <View style={styles.inline}>
@@ -65,17 +75,17 @@ export function JobCard({ ranked, employer }) {
 
         <View style={styles.wrap}>
           {job.shifts.map((s) => (
-            <ShiftTag key={s} label={SHIFT_LABEL[s]} />
+            <ShiftTag key={s} label={t(`shift.${s}`)} />
           ))}
           <Text
             style={styles.hours}
             color={colors.inkSoft}
-          >{`${hoursLabel(job)} · ${EMPLOYMENT_LABEL[job.employmentType]}`}</Text>
+          >{`${hoursLabel(t, job)} · ${t(`employment.${job.employmentType}`)}`}</Text>
         </View>
 
         <View style={styles.inline}>
           <Icon name="calendar" size={18} strokeWidth={2.5} />
-          <Text style={styles.start}>{START_LABEL[job.startsAt]}</Text>
+          <Text style={styles.start}>{t(`start.${job.startsAt}`)}</Text>
         </View>
 
         <View style={styles.rule} />
@@ -85,15 +95,23 @@ export function JobCard({ ranked, employer }) {
             <ReasonChip key={r.kind} reason={r} />
           ))}
           {warnings.map((w) => (
-            <WarningChip key={w.kind} text={w.text} />
+            <WarningChip key={w.kind} warning={w} />
           ))}
         </View>
 
-        {job.requirements.length > 0 ? (
+        {languages.length + job.requirements.length > 0 ? (
           <View style={[styles.wrap, styles.needs]}>
             <Text variant="label" color={colors.inkMuted} style={{ fontSize: 12, marginRight: 2 }}>
-              Needs
+              {t('card.needs')}
             </Text>
+            {languages.length > 0 ? (
+              <View style={styles.inline}>
+                <Icon name="globe" size={16} strokeWidth={2.5} color={colors.inkMuted} />
+                {languages.map((l) => (
+                  <LanguageTag key={l} language={l} spoken={spoken.includes(l)} />
+                ))}
+              </View>
+            ) : null}
             {job.requirements.slice(0, 2).map((q) => (
               <RequirementTag key={q} label={q} />
             ))}

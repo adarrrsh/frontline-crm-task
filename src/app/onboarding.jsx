@@ -3,18 +3,22 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppLanguagePicker } from '@/components/AppLanguagePicker';
 import { Button } from '@/components/Button';
-import { CategoryChip, ShiftChip } from '@/components/Chips';
+import { CategoryChip, LanguageChip, ShiftChip } from '@/components/Chips';
 import { StepHeader, Stepper, ToggleRow } from '@/components/Controls';
 import { Icon } from '@/components/Icon';
 import { LocationPickerSheet } from '@/components/LocationPickerSheet';
 import { RadiusSlider } from '@/components/RadiusSlider';
 import { Text } from '@/components/Text';
 import { DEMO_PROFILE } from '@/data/demoProfile';
-import { CATEGORY_ICON, experienceLabel } from '@/domain/labels';
-import { CATEGORIES, SHIFTS } from '@/domain/types';
+import { CATEGORY_ICON } from '@/domain/labels';
+import { formatMoney } from '@/domain/money';
+import { CATEGORIES, LANGUAGES, SHIFTS } from '@/domain/types';
 import { useLocationActions } from '@/hooks/useLocationActions';
 import { useLocationChoices } from '@/hooks/useLocationChoices';
+import { useT } from '@/hooks/useT';
+import { experienceLabel } from '@/i18n/format';
 import { useAppStore } from '@/store/useAppStore';
 import { categoryColor, colors, fonts, radius } from '@/theme';
 
@@ -23,6 +27,7 @@ const TOTAL = 4;
 const toggle = (list, item) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 
 export default function Onboarding() {
+  const t = useT();
   const saved = useAppStore((s) => s.profile);
   const saveProfile = useAppStore((s) => s.saveProfile);
   const completeOnboarding = useAppStore((s) => s.completeOnboarding);
@@ -72,36 +77,36 @@ export default function Onboarding() {
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <View>
               <Text variant="title1" accessibilityRole="header">
-                About you
+                {t('onboarding.aboutTitle')}
               </Text>
               <Text variant="body" color={colors.inkSoft} style={{ marginTop: 10 }}>
-                {"So employers know who's swiping."}
+                {t('onboarding.aboutBody')}
               </Text>
             </View>
             <View style={styles.field}>
               <Text variant="callout" style={styles.fieldLabel}>
-                First name
+                {t('onboarding.firstName')}
               </Text>
               <TextInput
                 value={draft.name}
                 onChangeText={(name) => patch({ name })}
-                placeholder="e.g. Jordan"
+                placeholder={t('onboarding.namePlaceholder')}
                 placeholderTextColor={colors.n500}
                 style={styles.input}
                 autoCapitalize="words"
                 autoComplete="given-name"
                 returnKeyType="done"
-                accessibilityLabel="First name"
+                accessibilityLabel={t('onboarding.firstName')}
               />
             </View>
             <View style={styles.field}>
               <Text variant="callout" style={styles.fieldLabel}>
-                Years of experience
+                {t('onboarding.experience')}
               </Text>
               <Stepper
                 size="large"
-                label="years of experience"
-                value={experienceLabel(draft.experienceYears)}
+                label={t('onboarding.experienceA11y')}
+                value={experienceLabel(t, draft.experienceYears)}
                 canDecrement={draft.experienceYears > 0}
                 canIncrement={draft.experienceYears < 3}
                 onDecrement={() =>
@@ -125,16 +130,34 @@ export default function Onboarding() {
             </View>
             <View style={styles.ruled}>
               <ToggleRow
-                title="I have my own transport"
-                subtitle="Car, bike or scooter"
-                label="I have my own transport"
+                title={t('onboarding.transport')}
+                subtitle={t('onboarding.transportSub')}
+                label={t('onboarding.transport')}
                 value={draft.hasTransport}
                 onChange={(hasTransport) => patch({ hasTransport })}
               />
             </View>
+            <View style={styles.field}>
+              <Text variant="callout" style={styles.fieldLabel}>
+                {t('onboarding.languages')}
+              </Text>
+              <View style={styles.wrap}>
+                {LANGUAGES.map((l) => (
+                  <LanguageChip
+                    key={l}
+                    language={l}
+                    selected={draft.languages.includes(l)}
+                    onPress={() => patch({ languages: toggle(draft.languages, l) })}
+                  />
+                ))}
+              </View>
+              <Text style={styles.small} color={colors.inkMuted}>
+                {t('onboarding.languagesHint')}
+              </Text>
+            </View>
           </ScrollView>
           <View style={[styles.footer, footerPad]}>
-            <Button label="Continue" iconRight="arrow" disabled={!draft.name.trim()} onPress={() => setStep(3)} />
+            <Button label={t('common.continue')} iconRight="arrow" disabled={!draft.name.trim()} onPress={() => setStep(3)} />
           </View>
         </>
       ) : null}
@@ -143,15 +166,15 @@ export default function Onboarding() {
         <>
           <ScrollView contentContainerStyle={[styles.content, { gap: 18, paddingTop: 10 }]}>
             <Text variant="title2" accessibilityRole="header">
-              {"What you're looking for"}
+              {t('onboarding.lookingTitle')}
             </Text>
             <View style={styles.field}>
               <View style={styles.between}>
                 <Text variant="callout" style={styles.fieldLabel}>
-                  Job types
+                  {t('onboarding.jobTypes')}
                 </Text>
                 <Text variant="callout" color={colors.inkMuted}>
-                  Pick any
+                  {t('onboarding.pickAny')}
                 </Text>
               </View>
               <View style={styles.grid}>
@@ -169,7 +192,7 @@ export default function Onboarding() {
             </View>
             <View style={styles.field}>
               <Text variant="callout" style={styles.fieldLabel}>
-                When can you work?
+                {t('onboarding.when')}
               </Text>
               <View style={styles.wrap}>
                 {SHIFTS.map((s) => (
@@ -185,15 +208,15 @@ export default function Onboarding() {
             <View style={styles.between}>
               <View style={{ flex: 1 }}>
                 <Text variant="callout" style={styles.fieldLabel}>
-                  Minimum pay
+                  {t('onboarding.minPay')}
                 </Text>
                 <Text style={styles.small} color={colors.inkMuted}>
-                  per hour
+                  {t('onboarding.perHour')}
                 </Text>
               </View>
               <Stepper
-                label="minimum pay per hour"
-                value={`$${draft.minPayPerHour}`}
+                label={t('onboarding.minPayA11y')}
+                value={formatMoney(draft.minPayPerHour)}
                 canDecrement={draft.minPayPerHour > 10}
                 onDecrement={() =>
                   patch({
@@ -210,15 +233,15 @@ export default function Onboarding() {
             <View style={{ gap: 10 }}>
               <View style={styles.between}>
                 <Text variant="callout" style={styles.fieldLabel}>
-                  How far can you travel?
+                  {t('onboarding.travel')}
                 </Text>
-                <Text style={styles.radiusValue}>{`Up to ${draft.maxDistanceKm} km`}</Text>
+                <Text style={styles.radiusValue}>{t('common.upToKm', { km: draft.maxDistanceKm })}</Text>
               </View>
               <RadiusSlider value={draft.maxDistanceKm} onChange={(maxDistanceKm) => patch({ maxDistanceKm })} />
             </View>
           </ScrollView>
           <View style={[styles.footer, footerPad]}>
-            <Button label="Continue" iconRight="arrow" onPress={() => setStep(4)} />
+            <Button label={t('common.continue')} iconRight="arrow" onPress={() => setStep(4)} />
           </View>
         </>
       ) : null}
@@ -229,16 +252,16 @@ export default function Onboarding() {
             <RadiusArt />
             <View style={{ gap: 12 }}>
               <Text style={styles.primerTitle} accessibilityRole="header">
-                Jobs you can actually get to
+                {t('onboarding.primerTitle')}
               </Text>
               <Text variant="body" color={colors.inkSoft} style={{ fontSize: 18, lineHeight: 26 }}>
-                We use your location to show jobs you can actually get to. We never share it.
+                {t('onboarding.primerBody')}
               </Text>
             </View>
           </View>
           <View style={[styles.footer, footerPad, { gap: 8 }]}>
-            <Button label="Enable location" icon="nav" onPress={finishWithDevice} />
-            <Button label="Choose a location instead" variant="secondary" onPress={() => setPicker(true)} />
+            <Button label={t('onboarding.enableLocation')} icon="nav" onPress={finishWithDevice} />
+            <Button label={t('onboarding.chooseLocation')} variant="secondary" onPress={() => setPicker(true)} />
           </View>
         </>
       ) : null}
@@ -260,6 +283,7 @@ export default function Onboarding() {
 
 function Welcome({ onStart, onDemo }) {
   const insets = useSafeAreaInsets();
+  const t = useT();
   return (
     <View style={styles.screen}>
       <StatusBar style="light" />
@@ -272,12 +296,15 @@ function Welcome({ onStart, onDemo }) {
             Shiftmatch
           </Text>
         </View>
+        <View style={{ marginTop: 18 }}>
+          <AppLanguagePicker compact onAccent />
+        </View>
         <View style={{ flex: 1 }} />
         <Text variant="display" color={colors.white} accessibilityRole="header">
-          Find shifts near you.
+          {t('welcome.title')}
         </Text>
         <Text style={styles.tagline} color={colors.white}>
-          Swipe right on the ones you want.
+          {t('welcome.tagline')}
         </Text>
         <View style={{ flex: 0.5 }} />
       </View>
@@ -290,10 +317,10 @@ function Welcome({ onStart, onDemo }) {
       </View>
       <View style={{ flex: 1 }} />
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 8, gap: 6 }]}>
-        <Button label="Get started" variant="ink" iconRight="arrow" onPress={onStart} />
+        <Button label={t('welcome.start')} variant="ink" iconRight="arrow" onPress={onStart} />
         <Pressable accessibilityRole="button" onPress={onDemo} style={styles.demoLink} hitSlop={8}>
           <Text style={styles.demoText} color={colors.primaryDeep}>
-            Try with a demo profile
+            {t('welcome.demo')}
           </Text>
         </Pressable>
       </View>

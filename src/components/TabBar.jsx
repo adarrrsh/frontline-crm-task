@@ -1,26 +1,29 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts } from '@/theme';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
 
-const TABS = {
-  index: { label: 'Discover', icon: 'layers' },
-  liked: { label: 'Liked', icon: 'heart' },
-  matches: { label: 'Matches', icon: 'badge' },
-  profile: { label: 'Profile', icon: 'user' },
+const TAB_ICON = {
+  index: 'layers',
+  liked: 'heart',
+  matches: 'badge',
+  profile: 'user',
 };
 
 /** Square tab bar: 2px ink rule, red top indicator on the active tab, badge on Matches. */
 export function TabBar({ state, navigation, badge }) {
   const insets = useSafeAreaInsets();
+  const t = useT();
   return (
     <View style={[styles.bar, { paddingBottom: insets.bottom }]} accessibilityRole="tablist">
       {state.routes.map((route, i) => {
-        const tab = TABS[route.name];
-        if (!tab) return null;
+        const icon = TAB_ICON[route.name];
+        if (!icon) return null;
+        const label = t(`tab.${route.name}`);
         const active = state.index === i;
         const color = active ? colors.primary : colors.inkMuted;
         const showBadge = route.name === 'matches' && badge > 0;
@@ -29,7 +32,7 @@ export function TabBar({ state, navigation, badge }) {
             key={route.key}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
-            accessibilityLabel={showBadge ? `${tab.label}, ${badge} new` : tab.label}
+            accessibilityLabel={showBadge ? t('tab.badge', { label, count: badge }) : label}
             onPress={() => {
               const e = navigation.emit({
                 type: 'tabPress',
@@ -41,9 +44,9 @@ export function TabBar({ state, navigation, badge }) {
             style={styles.tab}
           >
             <View style={[styles.indicator, { backgroundColor: active ? colors.primary : 'transparent' }]} />
-            <Icon name={tab.icon} size={26} strokeWidth={active ? 2.5 : 2} color={color} />
+            <Icon name={icon} size={26} strokeWidth={active ? 2.5 : 2} color={color} />
             <Text style={[styles.label, { fontFamily: active ? fonts.heavy : fonts.semibold }]} color={color}>
-              {tab.label}
+              {label}
             </Text>
             {showBadge ? (
               <View style={styles.badge}>

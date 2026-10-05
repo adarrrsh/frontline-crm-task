@@ -2,6 +2,9 @@ export const CATEGORIES = ['hospitality', 'retail', 'delivery', 'cleaning', 'war
 
 export const SHIFTS = ['morning', 'afternoon', 'evening', 'night', 'weekend'];
 
+/** Switzerland's four national languages, plus English. */
+export const LANGUAGES = ['de', 'fr', 'it', 'rm', 'en'];
+
 /**
  * Data shapes used across the app (documentation only; no runtime cost).
  *
@@ -9,6 +12,8 @@ export const SHIFTS = ['morning', 'afternoon', 'evening', 'night', 'weekend'];
  * @typedef {'morning' | 'afternoon' | 'evening' | 'night' | 'weekend'} Shift
  * @typedef {'full-time' | 'part-time' | 'casual' | 'flexible'} EmploymentType
  * @typedef {'immediately' | 'this week' | 'next week'} StartsAt
+ * @typedef {'de' | 'fr' | 'it' | 'rm' | 'en'} Language
+ * @typedef {'USD' | 'CHF'} Currency
  *
  * @typedef {{ latitude: number, longitude: number }} Coordinates
  *
@@ -27,7 +32,8 @@ export const SHIFTS = ['morning', 'afternoon', 'evening', 'night', 'weekend'];
  * @property {string} employerId
  * @property {string} title
  * @property {Category} category
- * @property {number} payPerHour
+ * @property {number} payPerHour In `currency`.
+ * @property {Currency} [currency] Defaults to USD.
  * @property {boolean} [tips]
  * @property {Shift[]} shifts
  * @property {ScheduleSlot[]} schedule
@@ -39,15 +45,17 @@ export const SHIFTS = ['morning', 'afternoon', 'evening', 'night', 'weekend'];
  * @property {StartsAt} startsAt
  * @property {number} postedDaysAgo
  * @property {string} description
+ * @property {Language[]} [languages] Any one of these is enough to do the job.
  *
  * @typedef {object} WorkerProfile
  * @property {string} name
  * @property {Category[]} categories
  * @property {Shift[]} shifts
- * @property {number} minPayPerHour
+ * @property {number} minPayPerHour USD.
  * @property {number} maxDistanceKm
  * @property {number} experienceYears
  * @property {boolean} hasTransport
+ * @property {Language[]} languages Empty = not stated, so no job is penalised.
  *
  * @typedef {'like' | 'pass'} SwipeDirection
  * @typedef {{ jobId: string, direction: SwipeDirection, at: number }} Swipe
@@ -69,12 +77,14 @@ export const SHIFTS = ['morning', 'afternoon', 'evening', 'night', 'weekend'];
  * @property {number} pay
  * @property {number} shiftFit
  * @property {number} urgency
+ * @property {number} language 1 if the worker speaks one of the job's languages (or either list is empty).
  * @property {number} affinity
  *
- * @typedef {'distance' | 'pay' | 'shifts' | 'urgency' | 'category' | 'affinity'} ReasonKind
- * @typedef {{ kind: ReasonKind, text: string }} Reason
- * @typedef {'belowMinPay' | 'partialShifts'} WarningKind
- * @typedef {{ kind: WarningKind, text: string }} Warning
+ * Reasons and warnings carry no text: the UI words them in the worker's language (src/i18n/format.js).
+ * @typedef {'distance' | 'pay' | 'shifts' | 'urgency' | 'category' | 'affinity' | 'language'} ReasonKind
+ * @typedef {{ kind: ReasonKind, params: object }} Reason
+ * @typedef {'belowMinPay' | 'partialShifts' | 'language'} WarningKind
+ * @typedef {{ kind: WarningKind, params: object }} Warning
  *
  * @typedef {object} RankedJob
  * @property {Job} job

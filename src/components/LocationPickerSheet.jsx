@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts, radius } from '@/theme';
 
 import { BottomSheet } from './BottomSheet';
@@ -13,6 +14,7 @@ export function LocationPickerSheet({ visible, ...rest }) {
 }
 
 function PickerBody({ choices, selectedId, radiusKm, onPick, onUseDevice, onClose }) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(selectedId ?? choices[0]?.id);
   const q = query.trim().toLowerCase();
@@ -22,11 +24,11 @@ function PickerBody({ choices, selectedId, radiusKm, onPick, onUseDevice, onClos
   return (
     <BottomSheet
       visible
-      title="Choose a location"
+      title={t('picker.title')}
       onClose={onClose}
       footer={
         <Button
-          label={chosen ? `Show jobs near ${chosen.name}` : 'Pick an area'}
+          label={chosen ? t('picker.showNear', { place: chosen.name }) : t('picker.pick')}
           disabled={!chosen}
           onPress={() => chosen && onPick(chosen)}
         />
@@ -37,12 +39,12 @@ function PickerBody({ choices, selectedId, radiusKm, onPick, onUseDevice, onClos
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search a city"
+          placeholder={t('picker.search')}
           placeholderTextColor={colors.inkMuted}
           style={styles.input}
           autoCorrect={false}
           returnKeyType="search"
-          accessibilityLabel="Search a city"
+          accessibilityLabel={t('picker.search')}
         />
       </View>
       <Pressable
@@ -52,15 +54,15 @@ function PickerBody({ choices, selectedId, radiusKm, onPick, onUseDevice, onClos
       >
         <Icon name="nav" size={20} strokeWidth={2.5} color={colors.primaryDeep} />
         <Text style={styles.deviceText} color={colors.primaryDeep}>
-          Use my current location
+          {t('picker.useCurrent')}
         </Text>
       </Pressable>
       <Text variant="label" color={colors.inkMuted} style={{ fontSize: 12, marginTop: 18, marginBottom: 4 }}>
-        Popular areas
+        {t('picker.popular')}
       </Text>
       {visible.length === 0 ? (
         <Text variant="callout" color={colors.inkMuted} style={{ paddingVertical: 16 }}>
-          {`No demo area matches “${query}”. This prototype covers the Bay Area only.`}
+          {t('picker.noMatch', { query })}
         </Text>
       ) : (
         visible.map((c) => {
@@ -78,7 +80,7 @@ function PickerBody({ choices, selectedId, radiusKm, onPick, onUseDevice, onClos
                 <Text
                   style={styles.meta}
                   color={colors.inkMuted}
-                >{`${c.jobCount} jobs within ${radiusKm} km · ${c.county}`}</Text>
+                >{t('picker.meta', { count: c.jobCount, km: radiusKm, county: c.county })}</Text>
               </View>
               {c.distance ? <Text style={styles.dist}>{c.distance}</Text> : null}
               <View

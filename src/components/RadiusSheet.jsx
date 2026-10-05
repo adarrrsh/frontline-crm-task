@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts } from '@/theme';
 
 import { BottomSheet } from './BottomSheet';
@@ -18,6 +19,7 @@ export function RadiusSheet({ visible, value, onApply, onClose, countWithin }) {
 
 /** Mounted only while open, so the draft always starts from the current radius. */
 function RadiusSheetBody({ value, onApply, onClose, countWithin }) {
+  const t = useT();
   const [draft, setDraft] = useState(value);
   const count = countWithin(draft);
   const delta = count - countWithin(value);
@@ -25,21 +27,21 @@ function RadiusSheetBody({ value, onApply, onClose, countWithin }) {
   return (
     <BottomSheet
       visible
-      title="Travel distance"
+      title={t('radius.title')}
       onClose={onClose}
-      footer={<Button label={count === 1 ? 'Show 1 job' : `Show ${count} jobs`} onPress={() => onApply(draft)} />}
+      footer={<Button label={t('radius.show', { count })} onPress={() => onApply(draft)} />}
     >
       <View style={{ gap: 18 }}>
-        <Text style={styles.big}>{`Up to ${draft} km`}</Text>
+        <Text style={styles.big}>{t('common.upToKm', { km: draft })}</Text>
         <RadiusSlider value={draft} onChange={setDraft} thumb={32} />
         <View style={styles.presets}>
           {PRESETS.map((km) => (
-            <PresetChip key={km} label={`${km} km`} selected={draft === km} onPress={() => setDraft(km)} />
+            <PresetChip key={km} label={t('common.km', { km })} selected={draft === km} onPress={() => setDraft(km)} />
           ))}
         </View>
         <View style={styles.count}>
           <Icon name="briefcase" size={20} strokeWidth={2.5} />
-          <Text style={styles.countText}>{`${count} ${count === 1 ? 'job' : 'jobs'} within ${draft} km`}</Text>
+          <Text style={styles.countText}>{t('radius.within', { count, km: draft })}</Text>
           {delta !== 0 ? (
             <Text style={styles.delta} color={delta > 0 ? colors.likeInk : colors.primaryDeep}>
               {delta > 0 ? `+${delta}` : `${delta}`}

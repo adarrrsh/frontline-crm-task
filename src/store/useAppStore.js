@@ -12,6 +12,7 @@ const INITIAL = {
   locationMode: 'device',
   manualLocation: null,
   matchesSeenAt: 0,
+  uiLanguage: 'en',
 };
 
 export const RADIUS_MIN = 1;
@@ -73,20 +74,22 @@ export const useAppStore = create()(
       setManualLocation: (manualLocation) => set({ manualLocation, locationMode: 'manual' }),
       chooseDeviceLocation: () => set({ locationMode: 'device' }),
       markMatchesSeen: (now) => set({ matchesSeenAt: now }),
+      setUiLanguage: (uiLanguage) => set({ uiLanguage }),
 
       resetDemo: (opts) =>
         set((s) => ({
           swipes: [],
           likedJobs: {},
           matchesSeenAt: 0,
-          ...(opts?.profile ? { ...INITIAL, profile: EMPTY_PROFILE } : { profile: s.profile }),
+          // The app language is a device setting, not demo data, so it survives both resets.
+          ...(opts?.profile ? { ...INITIAL, profile: EMPTY_PROFILE, uiLanguage: s.uiLanguage } : { profile: s.profile }),
         })),
     }),
     {
       name: 'shiftmatch/app',
       version: 1,
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: ({ profile, hasOnboarded, swipes, likedJobs, locationMode, manualLocation, matchesSeenAt }) => ({
+      partialize: ({ profile, hasOnboarded, swipes, likedJobs, locationMode, manualLocation, matchesSeenAt, uiLanguage }) => ({
         profile,
         hasOnboarded,
         swipes,
@@ -94,6 +97,7 @@ export const useAppStore = create()(
         locationMode,
         manualLocation,
         matchesSeenAt,
+        uiLanguage,
       }),
       // v1 is the first schema. Anything unrecognised falls back to defaults instead of crashing.
       migrate: (persisted, version) => (version === 1 && persisted && typeof persisted === 'object' ? persisted : INITIAL),

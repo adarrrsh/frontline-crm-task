@@ -7,6 +7,7 @@ export const DEMO_PROFILE = {
   maxDistanceKm: 10,
   experienceYears: 2,
   hasTransport: true,
+  languages: ['en', 'de'],
 };
 
 export const EMPTY_PROFILE = {
@@ -17,4 +18,5 @@ export const EMPTY_PROFILE = {
   maxDistanceKm: 10,
   experienceYears: 0,
   hasTransport: false,
+  languages: [],
 };

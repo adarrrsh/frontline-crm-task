@@ -17,6 +17,8 @@ import { useJobFeed } from '@/hooks/useJobFeed';
 import { useLocationActions } from '@/hooks/useLocationActions';
 import { useLocationChoices } from '@/hooks/useLocationChoices';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
+import { useT } from '@/hooks/useT';
+import { clockTime, placeLabel } from '@/i18n/format';
 import { selectCanUndo, useAppStore } from '@/store/useAppStore';
 import { useCatalogStore } from '@/store/useCatalogStore';
 import { useDeckStore } from '@/store/useDeckStore';
@@ -25,13 +27,12 @@ import { colors, fonts, radius } from '@/theme';
 
 const RADIUS_STEPS = [5, 10, 15, 25, 50];
 
-const clock = (t) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-
-function locationBarProps(loc, radius) {
+function locationBarProps(t, loc, radius) {
+  const near = t('location.near', { place: placeLabel(t, loc.placeName), km: radius });
   if (loc.source === 'manual')
     return {
-      title: `Near ${loc.placeName} · within ${radius} km`,
-      subtitle: 'Using manual location',
+      title: near,
+      subtitle: t('location.manual'),
       icon: 'pin',
       tone: 'off',
       showRadius: true,
@@ -39,40 +40,40 @@ function locationBarProps(loc, radius) {
   switch (loc.status) {
     case 'granted':
       return {
-        title: `Near ${loc.placeName} · within ${radius} km`,
-        subtitle: 'Using device location',
+        title: near,
+        subtitle: t('location.device'),
         icon: 'pin',
         tone: 'ok',
         showRadius: true,
       };
     case 'requesting':
       return {
-        title: 'Finding your location…',
-        subtitle: 'Usually takes a few seconds',
+        title: t('location.finding'),
+        subtitle: t('location.findingSub'),
         icon: 'locate',
         tone: 'loading',
         showRadius: true,
       };
     case 'unavailable':
       return {
-        title: 'Location unavailable',
-        subtitle: loc.lastTriedAt ? `Last tried ${clock(loc.lastTriedAt)}` : 'Tap to choose an area',
+        title: t('location.unavailable'),
+        subtitle: loc.lastTriedAt ? t('location.lastTried', { time: clockTime(t, loc.lastTriedAt) }) : t('location.tapToChoose'),
         icon: 'alert',
         tone: 'warn',
         showRadius: false,
       };
     case 'denied':
       return {
-        title: 'Location is off',
-        subtitle: 'Tap to choose an area',
+        title: t('location.off'),
+        subtitle: t('location.tapToChoose'),
         icon: 'pin-off',
         tone: 'off',
         showRadius: false,
       };
     default:
       return {
-        title: 'Location not set',
-        subtitle: 'Tap to choose an area',
+        title: t('location.notSet'),
+        subtitle: t('location.tapToChoose'),
         icon: 'pin-off',
         tone: 'off',
         showRadius: false,
@@ -88,6 +89,7 @@ function nextRadiusWithJobs(feed, radius) {
 
 export default function Discover() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const feed = useJobFeed();
   const loc = useEffectiveLocation();
   const radius = useAppStore((s) => s.profile.maxDistanceKm);
@@ -135,7 +137,7 @@ export default function Discover() {
     setRadius(km);
   };
 
-  const bar = locationBarProps(loc, radius);
+  const bar = locationBarProps(t, loc, radius);
   const deviceBlocked = loc.source === 'device' && loc.status !== 'granted' && loc.status !== 'requesting';
   const loading = feed.status === 'loading' || (loc.source === 'device' && loc.status === 'requesting');
 
@@ -145,11 +147,11 @@ export default function Discover() {
       <EmptyState
         icon="alert"
         tone="warn"
-        kicker="Couldn't load jobs"
-        title="Something went wrong"
-        body="We couldn't load jobs just now. Check your connection and try again."
+        kicker={t('discover.loadErrorKicker')}
+        title={t('discover.loadErrorTitle')}
+        body={t('discover.loadErrorBody')}
         primary={{
-          label: 'Retry',
+          label: t('common.retry'),
           icon: 'refresh',
           onPress: () => void reloadCatalog(),
         }}
@@ -160,16 +162,16 @@ export default function Discover() {
       <EmptyState
         icon="pin-off"
         tone="ink"
-        kicker="Location access off"
-        title="We can't see where you are"
-        body="Turn on location in Settings so we can show jobs you can get to — or pick an area yourself."
+        kicker={t('discover.deniedKicker')}
+        title={t('discover.deniedTitle')}
+        body={t('discover.deniedBody')}
         primary={{
-          label: 'Open Settings',
+          label: t('discover.openSettings'),
           icon: 'external',
           onPress: openSettings,
         }}
         secondary={{
-          label: 'Choose a location manually',
+          label: t('discover.chooseManually'),
           onPress: () => setPickerOpen(true),
         }}
       />
@@ -179,16 +181,16 @@ export default function Discover() {
       <EmptyState
         icon="locate"
         tone="warn"
-        kicker="Signal lost"
-        title="Couldn't find your location"
-        body="This happens indoors or with weak signal. Try again, or choose an area to keep swiping."
+        kicker={t('discover.lostKicker')}
+        title={t('discover.lostTitle')}
+        body={t('discover.lostBody')}
         primary={{
-          label: 'Retry',
+          label: t('common.retry'),
           icon: 'refresh',
           onPress: () => void requestLocation(),
         }}
         secondary={{
-          label: 'Choose manually',
+          label: t('discover.chooseManuallyShort'),
           onPress: () => setPickerOpen(true),
         }}
       />
@@ -198,16 +200,16 @@ export default function Discover() {
       <EmptyState
         icon="pin"
         tone="accent"
-        kicker="Location needed"
-        title="Where should we look?"
-        body="Share your location to see jobs you can actually get to, or pick an area yourself."
+        kicker={t('discover.neededKicker')}
+        title={t('discover.neededTitle')}
+        body={t('discover.neededBody')}
         primary={{
-          label: 'Enable location',
+          label: t('onboarding.enableLocation'),
           icon: 'nav',
           onPress: () => void requestLocation(),
         }}
         secondary={{
-          label: 'Choose a location manually',
+          label: t('discover.chooseManually'),
           onPress: () => setPickerOpen(true),
         }}
       />
@@ -222,22 +224,22 @@ export default function Discover() {
         <EmptyState
           icon="check"
           tone="like"
-          kicker="All caught up"
-          title="You've seen every job nearby"
-          body={`You liked ${seen.liked} of ${seen.total} jobs within ${radius} km. New ones usually appear in the morning.`}
+          kicker={t('discover.caughtUpKicker')}
+          title={t('discover.caughtUpTitle')}
+          body={t('discover.caughtUpBody', { liked: seen.liked, total: seen.total, km: radius })}
           primary={{
-            label: 'See your liked jobs',
+            label: t('discover.seeLiked'),
             icon: 'heart',
             onPress: () => router.navigate('/liked'),
           }}
           secondary={
             next
               ? {
-                  label: `Expand to ${next} km`,
+                  label: t('discover.expand', { km: next }),
                   onPress: () => setRadius(next),
                 }
               : {
-                  label: 'Choose another area',
+                  label: t('discover.chooseAnother'),
                   onPress: () => setPickerOpen(true),
                 }
           }
@@ -249,16 +251,16 @@ export default function Discover() {
         <EmptyState
           icon="search"
           tone="accent"
-          kicker="0 jobs"
-          title={`No jobs within ${radius} km`}
-          body={`There ${extra === 1 ? 'is 1 job' : `are ${extra} jobs`} between ${radius} and ${next} km of you.`}
+          kicker={t('discover.noJobsKicker')}
+          title={t('discover.noJobsWithin', { km: radius })}
+          body={t('discover.jobsBetween', { count: extra, km: radius, next })}
           primary={{
-            label: `Expand to ${next} km`,
+            label: t('discover.expand', { km: next }),
             icon: 'sliders',
             onPress: () => setRadius(next),
           }}
           secondary={{
-            label: 'Edit preferences',
+            label: t('discover.editPreferences'),
             onPress: () => router.navigate('/profile'),
           }}
         />
@@ -268,11 +270,11 @@ export default function Discover() {
         <EmptyState
           icon="search"
           tone="accent"
-          kicker="0 jobs"
-          title={`No jobs near ${loc.placeName}`}
-          body="This prototype has jobs around the South Bay and San Francisco. Try another area."
+          kicker={t('discover.noJobsKicker')}
+          title={t('discover.noJobsNear', { place: placeLabel(t, loc.placeName) })}
+          body={t('discover.noJobsNearBody')}
           primary={{
-            label: 'Choose another area',
+            label: t('discover.chooseAnother'),
             icon: 'pin',
             onPress: () => setPickerOpen(true),
           }}
@@ -292,7 +294,7 @@ export default function Discover() {
         subtitle={bar.subtitle}
         icon={bar.icon}
         tone={bar.tone}
-        radius={bar.showRadius ? `${radius} km` : undefined}
+        radius={bar.showRadius ? t('common.km', { km: radius }) : undefined}
         onPressLocation={() => setPickerOpen(true)}
         onPressRadius={() => setRadiusOpen(true)}
       />
@@ -336,7 +338,7 @@ export default function Discover() {
       {loading ? (
         <View style={[styles.bottom, styles.status]} accessibilityLiveRegion="polite">
           <Spinner />
-          <Text style={styles.statusText}>Finding jobs near you…</Text>
+          <Text style={styles.statusText}>{t('discover.finding')}</Text>
         </View>
       ) : showActions ? (
         <View style={styles.bottom}>

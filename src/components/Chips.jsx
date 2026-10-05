@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { CATEGORY_ICON, CATEGORY_LABEL, REASON_ICON, SHIFT_LABEL } from '@/domain/labels';
+import { CATEGORY_ICON, REASON_ICON } from '@/domain/labels';
+import { useT } from '@/hooks/useT';
+import { reasonText, warningText } from '@/i18n/format';
 import { categoryColor, colors, fonts, radius } from '@/theme';
 
 import { Icon } from './Icon';
@@ -10,12 +12,14 @@ import { Text } from './Text';
 
 /** Job-type chip: fills with its category color when selected. */
 export function CategoryChip({ category, selected, onPress, grid }) {
+  const t = useT();
   const c = categoryColor[category];
+  const label = t(`category.${category}`);
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
-      accessibilityLabel={CATEGORY_LABEL[category]}
+      accessibilityLabel={label}
       onPress={onPress}
       style={[
         styles.selChip,
@@ -28,7 +32,7 @@ export function CategoryChip({ category, selected, onPress, grid }) {
     >
       <Icon name={CATEGORY_ICON[category]} size={20} strokeWidth={2.5} color={selected ? colors.white : c} />
       <Text style={styles.selChipText} color={selected ? colors.white : colors.ink}>
-        {CATEGORY_LABEL[category]}
+        {label}
       </Text>
       {grid ? <View style={{ flex: 1 }} /> : null}
       {selected && grid ? <Icon name="check" size={18} strokeWidth={3} color={colors.white} /> : null}
@@ -38,11 +42,23 @@ export function CategoryChip({ category, selected, onPress, grid }) {
 
 /** Availability chip: fills ink when selected. */
 export function ShiftChip({ shift, selected, onPress }) {
+  const t = useT();
+  return <ToggleChip label={t(`shift.${shift}`)} selected={selected} onPress={onPress} />;
+}
+
+/** Spoken-language chip: "DE German". */
+export function LanguageChip({ language, selected, onPress }) {
+  const t = useT();
+  return <ToggleChip code={language.toUpperCase()} label={t(`lang.${language}`)} selected={selected} onPress={onPress} />;
+}
+
+/** Multi-select chip that fills ink when selected. */
+function ToggleChip({ label, code, selected, onPress }) {
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
-      accessibilityLabel={SHIFT_LABEL[shift]}
+      accessibilityLabel={label}
       onPress={onPress}
       style={[
         styles.selChip,
@@ -53,8 +69,13 @@ export function ShiftChip({ shift, selected, onPress }) {
         },
       ]}
     >
+      {code ? (
+        <Text style={styles.code} color={selected ? colors.bg : colors.inkMuted}>
+          {code}
+        </Text>
+      ) : null}
       <Text style={styles.selChipText} color={selected ? colors.bg : colors.ink}>
-        {SHIFT_LABEL[shift]}
+        {label}
       </Text>
     </Pressable>
   );
@@ -84,17 +105,19 @@ export function PresetChip({ label, selected, onPress }) {
 }
 
 export function ReasonChip({ reason }) {
+  const t = useT();
   return (
     <View style={[styles.chip, { backgroundColor: colors.likeTint }]}>
       <Icon name={REASON_ICON[reason.kind]} size={16} strokeWidth={2.5} color={colors.likeInk} />
       <Text variant="chip" color={colors.likeInk}>
-        {reason.text}
+        {reasonText(t, reason)}
       </Text>
     </View>
   );
 }
 
-export function WarningChip({ text }) {
+export function WarningChip({ warning }) {
+  const t = useT();
   return (
     <View
       style={[
@@ -108,7 +131,7 @@ export function WarningChip({ text }) {
     >
       <Icon name="alert" size={16} strokeWidth={2.5} color={colors.warningInk} />
       <Text variant="chip" color={colors.warningInk}>
-        {text}
+        {warningText(t, warning)}
       </Text>
     </View>
   );
@@ -143,6 +166,31 @@ export function RequirementTag({ label, large }) {
   );
 }
 
+/** A job language: filled green when the worker speaks it. */
+export function LanguageTag({ language, spoken, large }) {
+  const t = useT();
+  return (
+    <View
+      accessibilityLabel={t(`lang.${language}`)}
+      style={[
+        styles.tag,
+        {
+          height: large ? 30 : 28,
+          backgroundColor: spoken ? colors.likeTint : 'transparent',
+          borderWidth: 1.5,
+          borderColor: spoken ? colors.likeTint : colors.n400,
+          gap: 5,
+        },
+      ]}
+    >
+      {spoken ? <Icon name="check" size={large ? 15 : 14} strokeWidth={3} color={colors.likeInk} /> : null}
+      <Text variant="chip" style={!large && { fontSize: 13 }} color={spoken ? colors.likeInk : colors.ink}>
+        {large ? t(`lang.${language}`) : language.toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
 /** Square dot with an expanding ring — "waiting for reply". */
 export function Pulse({ color = colors.ink }) {
   const p = useSharedValue(0);
@@ -162,12 +210,13 @@ export function Pulse({ color = colors.ink }) {
 }
 
 export function StatusPill({ status }) {
+  const t = useT();
   if (status === 'pending')
     return (
-      <View style={[styles.pill, { backgroundColor: colors.n200, gap: 8 }]} accessibilityLabel="Waiting for reply">
+      <View style={[styles.pill, { backgroundColor: colors.n200, gap: 8 }]} accessibilityLabel={t('status.pending')}>
         <Pulse />
         <Text variant="chip" style={styles.pillText}>
-          Waiting for reply
+          {t('status.pending')}
         </Text>
       </View>
     );
@@ -176,14 +225,14 @@ export function StatusPill({ status }) {
       <View style={[styles.pill, { backgroundColor: colors.like }]}>
         <Icon name="check" size={14} strokeWidth={3} color={colors.white} />
         <Text style={[styles.pillText, { fontFamily: fonts.heavy }]} color={colors.white}>
-          Matched
+          {t('status.matched')}
         </Text>
       </View>
     );
   return (
     <View style={[styles.pill, { borderWidth: 1.5, borderColor: colors.n400 }]}>
       <Text variant="chip" style={styles.pillText} color={colors.inkMuted}>
-        Not this time
+        {t('status.declined')}
       </Text>
     </View>
   );
@@ -210,6 +259,7 @@ const styles = StyleSheet.create({
   },
   gridChip: { height: 46, paddingHorizontal: 10 },
   selChipText: { fontFamily: fonts.heavy, fontSize: 15, lineHeight: 20 },
+  code: { fontFamily: fonts.heavy, fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
   preset: { flex: 1 },
   chip: {
     height: 32,

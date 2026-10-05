@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts, radius } from '@/theme';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
 
 export function Stepper({ value, onDecrement, onIncrement, canDecrement = true, canIncrement = true, size = 'compact', label }) {
+  const t = useT();
   const large = size === 'large';
   const h = large ? 56 : 48;
   const btn = large ? 64 : 48;
@@ -19,7 +21,7 @@ export function Stepper({ value, onDecrement, onIncrement, canDecrement = true, 
       onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'increment' ? onIncrement() : onDecrement())}
     >
       <Pressable
-        accessibilityLabel={`Less ${label}`}
+        accessibilityLabel={t('stepper.less', { label })}
         disabled={!canDecrement}
         onPress={onDecrement}
         style={({ pressed }) => [
@@ -43,7 +45,7 @@ export function Stepper({ value, onDecrement, onIncrement, canDecrement = true, 
         </Text>
       </View>
       <Pressable
-        accessibilityLabel={`More ${label}`}
+        accessibilityLabel={t('stepper.more', { label })}
         disabled={!canIncrement}
         onPress={onIncrement}
         style={({ pressed }) => [
@@ -92,9 +94,10 @@ export function ToggleRow({ title, subtitle, ...toggle }) {
 
 /** Segmented progress for onboarding: back chevron · 4 bars · "2/4". */
 export function StepHeader({ step, total, onBack }) {
+  const t = useT();
   return (
     <View style={styles.stepHeader}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} disabled={!onBack} style={styles.back}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onBack} disabled={!onBack} style={styles.back}>
         {onBack ? <Icon name="chev-l" size={28} strokeWidth={2.5} /> : null}
       </Pressable>
       <View style={styles.bars}>

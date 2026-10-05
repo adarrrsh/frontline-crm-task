@@ -5,14 +5,18 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
-import { Kicker, ReasonChip, RequirementTag, StatusPill, WarningChip } from '@/components/Chips';
+import { Kicker, LanguageTag, ReasonChip, RequirementTag, StatusPill, WarningChip } from '@/components/Chips';
 import { ContactSheet } from '@/components/ContactSheet';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { Text } from '@/components/Text';
 import { formatDistance } from '@/domain/geo';
-import { CATEGORY_ICON, CATEGORY_LABEL, EMPLOYMENT_LABEL, hoursLabel, SHIFT_LABEL, START_SHORT, timeAgo } from '@/domain/labels';
+import { CATEGORY_ICON } from '@/domain/labels';
+import { currencyOf, formatMoney } from '@/domain/money';
 import { useJobDetails } from '@/hooks/useLikedJobs';
+import { useT } from '@/hooks/useT';
+import { hoursLabel, timeAgo } from '@/i18n/format';
+import { useAppStore } from '@/store/useAppStore';
 import { categoryColor, colors, fonts, radius } from '@/theme';
 
 function Section({ title, children }) {
@@ -27,6 +31,8 @@ function Section({ title, children }) {
 export default function JobDetail() {
   const { id, from } = useLocalSearchParams();
   const details = useJobDetails(id);
+  const t = useT();
+  const spoken = useAppStore((s) => s.profile.languages);
   const insets = useSafeAreaInsets();
   const [contactOpen, setContactOpen] = useState(false);
   const [now] = useState(() => Date.now());
@@ -47,8 +53,8 @@ export default function JobDetail() {
         <EmptyState
           icon="search"
           tone="ink"
-          title="This job is no longer available"
-          primary={{ label: 'Back', icon: 'chev-l', onPress: goBack }}
+          title={t('job.gone')}
+          primary={{ label: t('common.back'), icon: 'chev-l', onPress: goBack }}
         />
       </View>
     );
@@ -60,10 +66,12 @@ export default function JobDetail() {
   const statusNote = !liked
     ? null
     : liked.status === 'matched'
-      ? `Matched ${timeAgo(liked.resolvedAt ?? now, now)} · they want to hear from you`
+      ? t('job.matchedNote', { ago: timeAgo(t, liked.resolvedAt ?? now, now) })
       : liked.status === 'pending'
-        ? `Liked ${timeAgo(liked.likedAt, now)} · the employer is reviewing`
-        : 'The employer went with someone else this time';
+        ? t('job.pendingNote', { ago: timeAgo(t, liked.likedAt, now) })
+        : t('job.declinedNote');
+  const fromLabel = from ? t(`tab.${from}`) : null;
+  const languages = job.languages ?? [];
 
   return (
     <View style={styles.screen}>
@@ -76,14 +84,14 @@ export default function JobDetail() {
         <View style={[styles.hero, { backgroundColor: c, paddingTop: insets.top + 4 }]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Back to ${from ?? 'previous screen'}`}
+            accessibilityLabel={t('job.backTo', { screen: fromLabel ?? t('job.previous') })}
             onPress={goBack}
             style={styles.back}
             hitSlop={6}
           >
             <Icon name="chev-l" size={26} strokeWidth={2.75} color={colors.white} />
             <Text style={styles.backText} color={colors.white}>
-              {from ?? 'Back'}
+              {fromLabel ?? t('common.back')}
             </Text>
           </Pressable>
           <View style={styles.who}>
@@ -99,7 +107,7 @@ export default function JobDetail() {
               <View style={styles.catRow}>
                 <Icon name={CATEGORY_ICON[job.category]} size={14} strokeWidth={2.5} color={colors.white} />
                 <Text style={styles.cat} color={colors.white}>
-                  {CATEGORY_LABEL[job.category]}
+                  {t(`category.${job.category}`)}
                 </Text>
               </View>
             </View>
@@ -111,12 +119,14 @@ export default function JobDetail() {
 
         <View style={styles.keyFacts}>
           <View style={styles.fact}>
-            <Kicker>Pay</Kicker>
-            <Text style={styles.factValue}>{`$${job.payPerHour}/hr`}</Text>
-            {job.tips ? <Text style={styles.factSub}>+ tips</Text> : null}
+            <Kicker>{t('job.pay')}</Kicker>
+            <Text style={styles.factValue}>
+              {t('pay.perHour', { amount: formatMoney(job.payPerHour, currencyOf(job)) })}
+            </Text>
+            {job.tips ? <Text style={styles.factSub}>{t('job.tips')}</Text> : null}
           </View>
           <View style={[styles.fact, styles.factDivider]}>
-            <Kicker>Distance</Kicker>
+            <Kicker>{t('job.distance')}</Kicker>
             <Text style={styles.factValue}>{distanceKm !== null ? formatDistance(distanceKm) : '—'}</Text>
             <Text style={styles.factSub}>{job.area}</Text>
           </View>
@@ -132,14 +142,14 @@ export default function JobDetail() {
         ) : null}
 
         <View style={styles.body}>
-          <Section title="Shifts">
+          <Section title={t('job.shifts')}>
             {job.schedule.map((s) => (
               <View key={`${s.days}-${s.time}`} style={styles.slot}>
                 <Text style={styles.slotDays}>{s.days}</Text>
                 <Text style={styles.slotTime}>{s.time}</Text>
                 <View style={styles.slotTag}>
                   <Text variant="chip" style={{ fontSize: 13 }}>
-                    {SHIFT_LABEL[s.shift]}
+                    {t(`shift.${s.shift}`)}
                   </Text>
                 </View>
               </View>
@@ -148,9 +158,9 @@ export default function JobDetail() {
 
           <View style={styles.triple}>
             {[
-              ['Hours', hoursLabel(job)],
-              ['Type', EMPLOYMENT_LABEL[job.employmentType]],
-              ['Start', START_SHORT[job.startsAt]],
+              [t('job.hours'), hoursLabel(t, job)],
+              [t('job.type'), t(`employment.${job.employmentType}`)],
+              [t('job.start'), t(`startShort.${job.startsAt}`)],
             ].map(([k, v], i) => (
               <View key={k} style={[styles.tripleCell, i > 0 && styles.tripleDivider]}>
                 <Kicker>{k}</Kicker>
@@ -160,20 +170,35 @@ export default function JobDetail() {
           </View>
 
           {reasons.length + warnings.length > 0 ? (
-            <Section title="Why this job">
+            <Section title={t('job.why')}>
               <View style={styles.wrap}>
                 {reasons.map((r) => (
                   <ReasonChip key={r.kind} reason={r} />
                 ))}
                 {warnings.map((w) => (
-                  <WarningChip key={w.kind} text={w.text} />
+                  <WarningChip key={w.kind} warning={w} />
                 ))}
               </View>
             </Section>
           ) : null}
 
+          {languages.length > 0 ? (
+            <Section title={t('job.languages')}>
+              <View style={styles.wrap}>
+                {languages.map((l) => (
+                  <LanguageTag key={l} language={l} spoken={spoken.includes(l)} large />
+                ))}
+              </View>
+              {languages.length > 1 ? (
+                <Text style={[styles.factSub, { marginTop: 8 }]} color={colors.inkMuted}>
+                  {t('job.languagesHint')}
+                </Text>
+              ) : null}
+            </Section>
+          ) : null}
+
           {job.requirements.length > 0 ? (
-            <Section title="Requirements">
+            <Section title={t('job.requirements')}>
               <View style={styles.wrap}>
                 {job.requirements.map((q) => (
                   <RequirementTag key={q} label={q} large />
@@ -182,7 +207,7 @@ export default function JobDetail() {
             </Section>
           ) : null}
 
-          <Section title="About the role">
+          <Section title={t('job.about')}>
             <Text variant="body">{job.description}</Text>
           </Section>
         </View>
@@ -190,7 +215,7 @@ export default function JobDetail() {
 
       {matched ? (
         <View style={[styles.sticky, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
-          <Button label="Contact employer" icon="phone" onPress={() => setContactOpen(true)} />
+          <Button label={t('matches.contact')} icon="phone" onPress={() => setContactOpen(true)} />
         </View>
       ) : null}
       <ContactSheet employer={contactOpen ? (employer ?? null) : null} onClose={() => setContactOpen(false)} />

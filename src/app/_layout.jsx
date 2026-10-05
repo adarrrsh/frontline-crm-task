@@ -18,6 +18,7 @@ import { MatchModalHost } from '@/components/MatchModalHost';
 import { Text } from '@/components/Text';
 import { useAppForeground } from '@/hooks/useAppForeground';
 import { useMatchResolver } from '@/hooks/useMatchResolver';
+import { useT } from '@/hooks/useT';
 import { useAppStore } from '@/store/useAppStore';
 import { useCatalogStore } from '@/store/useCatalogStore';
 import { useLocationStore } from '@/store/useLocationStore';
@@ -91,17 +92,18 @@ export default function RootLayout() {
 }
 
 export function ErrorBoundary({ error, retry }) {
+  const t = useT();
   return (
     <SafeAreaView style={[styles.root, styles.error]}>
       <Text variant="label" color={colors.primaryDeep}>
-        Something went wrong
+        {t('error.kicker')}
       </Text>
-      <Text variant="title2">We hit a snag loading this screen.</Text>
+      <Text variant="title2">{t('error.title')}</Text>
       <Text variant="body" color={colors.inkSoft}>
         {error.message}
       </Text>
       <View style={{ flex: 1 }} />
-      <Button label="Reload" icon="refresh" onPress={() => void retry()} />
+      <Button label={t('common.reload')} icon="refresh" onPress={() => void retry()} />
     </SafeAreaView>
   );
 }

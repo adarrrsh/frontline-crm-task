@@ -4,6 +4,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useT } from '@/hooks/useT';
 import { RADIUS_MAX, RADIUS_MIN } from '@/store/useAppStore';
 import { colors, fonts, shadows } from '@/theme';
 
@@ -13,6 +14,7 @@ const toFrac = (v, min, max) => (v - min) / (max - min);
 
 /** Square-thumb slider. Drag or tap anywhere on the track; values are whole km. */
 export function RadiusSlider({ value, onChange, min = RADIUS_MIN, max = RADIUS_MAX, thumb = 28 }) {
+  const t = useT();
   const width = useSharedValue(0);
   const frac = useSharedValue(toFrac(value, min, max));
   const last = useSharedValue(value);
@@ -60,12 +62,12 @@ export function RadiusSlider({ value, onChange, min = RADIUS_MIN, max = RADIUS_M
           onLayout={onLayout}
           accessible
           accessibilityRole="adjustable"
-          accessibilityLabel="Travel distance"
+          accessibilityLabel={t('radius.slider')}
           accessibilityValue={{
             min,
             max,
             now: value,
-            text: `${value} kilometres`,
+            text: t('radius.sliderValue', { km: value }),
           }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={(e) =>
@@ -78,8 +80,8 @@ export function RadiusSlider({ value, onChange, min = RADIUS_MIN, max = RADIUS_M
         </View>
       </GestureDetector>
       <View style={styles.ends}>
-        <Text style={styles.end} color={colors.inkMuted}>{`${min} km`}</Text>
-        <Text style={styles.end} color={colors.inkMuted}>{`${max} km`}</Text>
+        <Text style={styles.end} color={colors.inkMuted}>{t('common.km', { km: min })}</Text>
+        <Text style={styles.end} color={colors.inkMuted}>{t('common.km', { km: max })}</Text>
       </View>
     </View>
   );

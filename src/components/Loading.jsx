@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
+import { useT } from '@/hooks/useT';
 import { colors, radius } from '@/theme';
 
 export function Spinner({ size = 24, color = colors.primary }) {
@@ -32,13 +33,14 @@ function useShimmer() {
 
 /** Skeleton that mirrors the real card's blocks so nothing jumps when data lands. */
 export function SkeletonCard() {
+  const t = useT();
   const shimmer = useShimmer();
   const bar = (w, h) => (
     <Animated.View style={[{ width: w, height: h, borderRadius: 4, backgroundColor: colors.n300 }, shimmer]} />
   );
   const rule = <View style={{ height: 2, backgroundColor: colors.n300 }} />;
   return (
-    <View style={styles.card} accessibilityLabel="Loading jobs">
+    <View style={styles.card} accessibilityLabel={t('loading.jobs')}>
       <View style={styles.row}>
         {bar(48, 48)}
         <View style={{ gap: 6 }}>

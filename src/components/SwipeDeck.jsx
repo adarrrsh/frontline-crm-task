@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useT } from '@/hooks/useT';
 import { colors, fonts, radius, shadows } from '@/theme';
 
 import { JobCard, jobAccessibilityLabel } from './JobCard';
@@ -65,6 +66,7 @@ function NextCard({ ranked, employer, drag }) {
 }
 
 function TopCard({ ranked, employer, onSwipe, drag, flingRef }) {
+  const t = useT();
   const { width } = useWindowDimensions();
   const x = useSharedValue(0);
   const y = useSharedValue(0);
@@ -140,11 +142,11 @@ function TopCard({ ranked, employer, onSwipe, drag, flingRef }) {
       <Animated.View
         style={[styles.cardFrame, styles.topFrame, cardStyle]}
         accessible
-        accessibilityLabel={jobAccessibilityLabel(ranked, employer)}
-        accessibilityHint="Swipe right if you're interested, left to pass. Or use the buttons below."
+        accessibilityLabel={jobAccessibilityLabel(t, ranked, employer)}
+        accessibilityHint={t('deck.hint')}
         accessibilityActions={[
-          { name: 'like', label: 'Interested' },
-          { name: 'pass', label: 'Pass' },
+          { name: 'like', label: t('actions.interested') },
+          { name: 'pass', label: t('actions.pass') },
         ]}
         onAccessibilityAction={(e) => flyOut(e.nativeEvent.actionName === 'like' ? 'like' : 'pass')}
       >
@@ -154,7 +156,7 @@ function TopCard({ ranked, employer, onSwipe, drag, flingRef }) {
           style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: 'rgba(24,134,75,0.10)' }, likeTint]}
         >
           <View style={[styles.stamp, styles.stampLike]}>
-            <Text style={[styles.stampText, { fontSize: 34, color: colors.like }]}>INTERESTED</Text>
+            <Text style={[styles.stampText, { fontSize: 34, color: colors.like }]}>{t('deck.stampLike')}</Text>
           </View>
         </Animated.View>
         <Animated.View
@@ -162,7 +164,7 @@ function TopCard({ ranked, employer, onSwipe, drag, flingRef }) {
           style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: 'rgba(32,30,29,0.08)' }, passTint]}
         >
           <View style={[styles.stamp, styles.stampPass]}>
-            <Text style={[styles.stampText, { fontSize: 38, letterSpacing: 2.2 }]}>PASS</Text>
+            <Text style={[styles.stampText, { fontSize: 38, letterSpacing: 2.2 }]}>{t('deck.stampPass')}</Text>
           </View>
         </Animated.View>
       </Animated.View>
