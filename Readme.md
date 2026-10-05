@@ -2,7 +2,7 @@
 
 A Tinder-style iOS prototype that helps hourly workers (hospitality, retail, delivery, cleaning, warehouse) discover nearby jobs. Location decides which jobs you see and their order; a simulated employer may like you back.
 
-Built with **Expo SDK 57 · React Native 0.86 · TypeScript (strict) · Expo Router · Zustand · Reanimated 4 · Gesture Handler**. UI follows the *Shiftmatch* design (Modernist system: Archivo, square corners, 2px rules, one red).
+Built with **Expo SDK 57 · React Native 0.86 · JavaScript (ES modules, JSDoc types) · Expo Router · Zustand · Reanimated 4 · Gesture Handler**. UI follows the *Shiftmatch* design (Modernist system: Archivo, square corners, 2px rules, one red).
 
 ---
 
@@ -20,7 +20,6 @@ Other scripts:
 
 ```bash
 npm test           # Jest — domain logic + stores (46 tests)
-npm run typecheck  # tsc --noEmit
 npx eslint .       # Expo ESLint config, incl. React Compiler rules
 ```
 
@@ -58,7 +57,7 @@ The Simulator's default location (**Features → Location → Apple**, i.e. Appl
 
 ## How jobs are ranked
 
-Pure, deterministic functions in `src/domain/` (`ranking.ts`, `affinity.ts`, `reasons.ts`), all unit-tested.
+Pure, deterministic functions in `src/domain/` (`ranking.js`, `affinity.js`, `reasons.js`), all unit-tested.
 
 1. **Hard filters (the only things that hide a job):** not already swiped, and within your travel radius (haversine distance).
 2. **Features (0–1 each):**
@@ -84,11 +83,11 @@ The two visible cards are **pinned**, so re-ranking after a swipe or radius chan
 ```
 UI (src/app, src/components)  →  hooks (useJobFeed, useSwipeActions, useMatchResolver, …)
      →  stores (Zustand) + adapters (JobRepository, InterestService, LocationAdapter)
-          →  domain (pure TS: geo, ranking, affinity, reasons, matching)
+          →  domain (pure JS: geo, ranking, affinity, reasons, matching)
 ```
 
 - **Stores:** `useAppStore` is persisted to AsyncStorage (versioned) and holds the profile, swipes, likes with `resolveAt` + outcome, location mode, and the matches-seen mark. The location, catalog, deck and UI stores live in memory only. The deck, affinity and the Liked/Matches lists are **derived**, never stored.
-- **Adapters** are the seam for a real backend: swap `MockJobRepository` / `MockInterestService` in `src/repositories/index.ts`. Tests inject a fake `LocationAdapter`.
+- **Adapters** are the seam for a real backend: swap `MockJobRepository` / `MockInterestService` in `src/repositories/index.js`. Tests inject a fake `LocationAdapter`.
 - **Employer replies** use timestamps, not in-memory timers. One root-level resolver aims a single timer at the earliest pending reply and catches up after hydration and when the app returns to the foreground.
 
 Full design notes: [`plan.md`](plan.md).

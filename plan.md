@@ -10,14 +10,14 @@ Timebox: **6–8 hours.** If time runs out, the core flow (profile → location 
 
 | Area | Choice |
 |---|---|
-| Framework | Expo (latest SDK) + React Native, TypeScript (strict) |
+| Framework | Expo (latest SDK) + React Native, JavaScript (JSDoc types in `domain/types.js`) |
 | Platform | iOS only (Simulator: Features → Location → Custom Location) |
 | Backend | None. Bundled mock data plus a local service layer |
 | State | Zustand + `persist` (AsyncStorage) |
 | Location | `expo-location` |
 | Gestures | `react-native-reanimated` + `react-native-gesture-handler` (custom deck) |
 | Navigation | Expo Router (file-based) |
-| Styling | `StyleSheet` + `src/theme.ts` |
+| Styling | `StyleSheet` + `src/theme.js` |
 | Tests | Jest (`jest-expo`) for pure logic |
 
 ---
@@ -39,7 +39,7 @@ Timebox: **6–8 hours.** If time runs out, the core flow (profile → location 
 │  useCatalogStore  (memory)    │   locationAdapter (expo)     │
 │  useUiStore       (memory)    │                              │
 ├───────────────────────────────┴──────────────────────────────┤
-│ Domain      domain/  — pure TS: types, geo, ranking,         │  no React / Expo
+│ Domain      domain/  — pure JS: types, geo, ranking,         │  no React / Expo
 │             affinity, reasons, matching, interest            │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -78,12 +78,12 @@ interface LocationAdapter {          // thin wrapper over expo-location
 }
 ```
 - The mock implementations add 200–400 ms of latency, so loading states are real.
-- `MockInterestService` uses `domain/matching.ts` to **precompute** the outcome and `resolveAt`. A real backend would instead return `pending` and push the result later. The README names this as a known simplification.
-- `repositories/index.ts` is the **composition root**: it exports the active implementations. Tests replace them with fakes.
+- `MockInterestService` uses `domain/matching.js` to **precompute** the outcome and `resolveAt`. A real backend would instead return `pending` and push the result later. The README names this as a known simplification.
+- `repositories/index.js` is the **composition root**: it exports the active implementations. Tests replace them with fakes.
 
 ### 2.4 Key flows
 
-**App boot (`app/_layout.tsx`)**
+**App boot (`app/_layout.jsx`)**
 1. Wrap the app in `GestureHandlerRootView` and keep the splash screen up until `useAppStore` has hydrated.
 2. `useCatalogStore.load()` starts loading jobs and employers. On failure, an `EmptyState` offers a retry.
 3. `hasOnboarded` false → redirect to `/onboarding`. Otherwise, show the tabs.
@@ -126,55 +126,55 @@ SwipeDeck onSwipe(job, dir)
 
 ```
 src/app/                          # Expo Router routes (SDK 57 keeps them under src/; thin: layout + hooks + components)
-  _layout.tsx                     # providers, hydration gate, onboarding redirect, MatchResolver, MatchModalHost
-  onboarding.tsx                  # profile form → location primer
+  _layout.jsx                     # providers, hydration gate, onboarding redirect, MatchResolver, MatchModalHost
+  onboarding.jsx                  # profile form → location primer
   (tabs)/
-    _layout.tsx                   # tab bar (+ Matches badge)
-    index.tsx                     # Discover
-    liked.tsx                     # Liked jobs with status
-    matches.tsx                   # Mutual matches
-    profile.tsx                   # Preferences, radius, location mode, reset
-  job/[id].tsx                    # Job detail
+    _layout.jsx                   # tab bar (+ Matches badge)
+    index.jsx                     # Discover
+    liked.jsx                     # Liked jobs with status
+    matches.jsx                   # Mutual matches
+    profile.jsx                   # Preferences, radius, location mode, reset
+  job/[id].jsx                    # Job detail
 src/
   domain/                         # PURE — unit tested
-    types.ts
-    geo.ts                        # haversine, formatDistance
-    ranking.ts                    # candidates → features → score → sort → diversify
-    affinity.ts                   # Beta-smoothed category like-rate
-    reasons.ts                    # "why this job" chips + warnings
-    matching.ts                   # deterministic employer-interest simulation
-    interest.ts                   # dueInterests(), nextResolveAt()
-    weights.ts                    # ranking WEIGHTS + tuning constants
+    types.js
+    geo.js                        # haversine, formatDistance
+    ranking.js                    # candidates → features → score → sort → diversify
+    affinity.js                   # Beta-smoothed category like-rate
+    reasons.js                    # "why this job" chips + warnings
+    matching.js                   # deterministic employer-interest simulation
+    interest.js                   # dueInterests(), nextResolveAt()
+    weights.js                    # ranking WEIGHTS + tuning constants
   data/                           # mock fixtures (only imported by mock repos)
-    jobs.ts · employers.ts · demoLocations.ts · demoProfile.ts
+    jobs.js · employers.js · demoLocations.js · demoProfile.js
   repositories/
-    types.ts                      # JobRepository, InterestService, LocationAdapter
-    mock/MockJobRepository.ts
-    mock/MockInterestService.ts
-    expoLocationAdapter.ts
-    index.ts                      # composition root
+    types.js                      # JobRepository, InterestService, LocationAdapter
+    mock/MockJobRepository.js
+    mock/MockInterestService.js
+    expoLocationAdapter.js
+    index.js                      # composition root
   store/
-    useAppStore.ts · useLocationStore.ts · useCatalogStore.ts · useUiStore.ts
+    useAppStore.js · useLocationStore.js · useCatalogStore.js · useUiStore.js
   hooks/
-    useEffectiveLocation.ts · useJobFeed.ts · useSwipeActions.ts
-    useMatchResolver.ts · useAppForeground.ts
+    useEffectiveLocation.js · useJobFeed.js · useSwipeActions.js
+    useMatchResolver.js · useAppForeground.js
   components/
-    SwipeDeck.tsx · JobCard.tsx · SwipeButtons.tsx · ReasonChips.tsx
-    MatchModalHost.tsx · RadiusSlider.tsx · LocationBanner.tsx
-    LocationPrompt.tsx            # denied / unavailable / manual picker
-    EmptyState.tsx · ChipSelect.tsx
-  theme.ts
+    SwipeDeck.jsx · JobCard.jsx · SwipeButtons.jsx · ReasonChips.jsx
+    MatchModalHost.jsx · RadiusSlider.jsx · LocationBanner.jsx
+    LocationPrompt.jsx            # denied / unavailable / manual picker
+    EmptyState.jsx · ChipSelect.jsx
+  theme.js
 __tests__/
   domain/  (geo, ranking, affinity, reasons, matching, interest)
   store/   (useLocationStore with fake adapter, useAppStore actions)
 ```
 
 ### 2.7 Conventions
-- TypeScript `strict`, with path alias `@/` → `src/`.
+- JavaScript with JSDoc `@typedef`s for the data shapes (`src/domain/types.js`); path alias `@/` → `src/` via `jsconfig.json`.
 - Components receive data as props. Only screens and the root hosts read stores.
 - Zustand selectors are narrow (`useAppStore(s => s.profile.maxDistanceKm)`) to avoid needless re-renders while swiping.
 - Swipe animations run on the UI thread (Reanimated worklets). The JS thread is touched only once per committed swipe (`runOnJS(onSwipe)`).
-- No `any`. Domain functions take explicit inputs, including `now`.
+- Domain functions take explicit inputs, including `now`.
 
 ---
 
@@ -238,16 +238,16 @@ interface LikedJob {
   - Fremont (~30 km)
   - San Francisco (~65 km)
 - This spread lets the demo show the radius effect clearly: 5 km → a handful of jobs, 25 km → most of the South Bay, 50 km+ → SF is still out of range until the location is moved to SF.
-- **Demo locations** (`demoLocations.ts`): Cupertino, San Jose, San Francisco. These are used for the manual fallback and for demonstrating location changes without the Simulator menu.
+- **Demo locations** (`demoLocations.js`): Cupertino, San Jose, San Francisco. These are used for the manual fallback and for demonstrating location changes without the Simulator menu.
 
 ---
 
 ## 5. Core logic
 
-### 5.1 Distance (`geo.ts`)
+### 5.1 Distance (`geo.js`)
 - Haversine distance in km. Shown on cards as `1.2 km` or `12 km`.
 
-### 5.2 Job suggestion algorithm (`ranking.ts`, `affinity.ts`, `reasons.ts`)
+### 5.2 Job suggestion algorithm (`ranking.js`, `affinity.js`, `reasons.js`)
 
 `rankJobs(jobs, profile, origin, swipes) → RankedJob[]`, where
 `RankedJob = { job, distanceKm, score /*0–100*/, features, reasons: string[], warnings: string[] }`
@@ -291,7 +291,7 @@ score    = round(100 · clamp(base + learned, 0, 1))
 - Proximity has the **largest single weight**, so location clearly drives the order as well as the radius filter.
 - All weights live in one exported `WEIGHTS` constant, so they are easy to tune and the README documents them.
 
-#### Learned affinity `A` (`affinity.ts`)
+#### Learned affinity `A` (`affinity.js`)
 A Beta(1,1)-smoothed like rate per category, computed from the swipe history:
 
 ```
@@ -308,7 +308,7 @@ By `score` descending, then `distanceKm` ascending, then `job.id`, so the order 
 #### Step 5: Diversity rerank (greedy, bounded)
 Go down the sorted list. Before placing the next job, check whether it would make **3 of the same category in a row** or **2 of the same employer in a row**. If so, look ahead up to 3 positions for the first job that breaks the run **and** scores at most 10 points lower, and swap it forward. If nothing qualifies, keep the original order. The rerank never promotes a much worse job just to add variety.
 
-#### Step 6: Explain (`reasons.ts`)
+#### Step 6: Explain (`reasons.js`)
 Each feature's weighted contribution is compared, and the top 2 positive reasons appear as chips on the card:
 
 | Trigger | Chip |
@@ -336,7 +336,7 @@ Worker: Retail + Hospitality, morning/afternoon/weekend shifts, min $18, has tra
 
 After the worker likes 3 warehouse jobs, A(warehouse) = 0.80, which adds 9 points. The picker moves to **58** and overtakes the retail job. The deck visibly learns, which is useful to show in the demo.
 
-### 5.3 Employer interest simulation (`matching.ts`)
+### 5.3 Employer interest simulation (`matching.js`)
 `simulateEmployerInterest(job, employer, profile) → { matched: boolean; delayMs: number }`
 
 - `probability = employer.baseInterest + fitBonus`, clamped to 0.05–0.95.
