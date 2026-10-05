@@ -63,7 +63,7 @@ location bar and pick **Cupertino**.
 
 ## Time spent
 
-_≈ X hours_ (fill in)
+_≈ 2 hours
 
 ## Next steps
 
